@@ -33,7 +33,7 @@ SEMMacroBuildCLI(
 	itkMABMISAtlasXMLFile.cxx
   #EXECUTABLE_ONLY
   )
-  
+
   message(STATUS ${ITK_LIBRARIES})
 #-----------------------------------------------------------------------------
 set(MODULE_NAME IGR3D_MABMIS_Testing)
@@ -46,8 +46,8 @@ SEMMacroBuildCLI(
 	itkMABMISAtlasXMLFile.cxx
   #EXECUTABLE_ONLY
   )
-  
-  
+
+
 #-----------------------------------------------------------------------------
 if(BUILD_TESTING)
   add_subdirectory(Testing)
