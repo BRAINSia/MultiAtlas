@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE MABMISAtlas>
 <MABMISAtlas>
-<AtlasDirectory></AtlasDirectory>
+<AtlasDirectory>XX</AtlasDirectory>
 <NumberOfAtlases>12</NumberOfAtlases>
 <NumberOfSimulatedAtlases>8</NumberOfSimulatedAtlases>
 <AtlasFileList>

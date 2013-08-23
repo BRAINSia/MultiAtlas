@@ -9,9 +9,9 @@ int numEigenVector = 4;         // t
 int numSampleEachDirection = 4; // n  n^t total number of intermediate templates
 
 #ifdef _WIN32
-#define FILESEP '\\'
+static const char FILESEP='\\';
 #else
-#define  FILESEP '/'
+static const char FILESEP='/';
 #endif
 
 namespace itk

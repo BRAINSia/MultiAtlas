@@ -88,6 +88,7 @@ MABMISImageDataXMLFileReader::EndElement(const char *name)
     {
     if( m_ImageData == 0 )
       {
+      std::cout << name << std::endl;
       RAISE_EXCEPTION("The xml format is not right. Please check it!");
       }
     }
@@ -97,7 +98,7 @@ MABMISImageDataXMLFileReader::EndElement(const char *name)
     }
   if( itksys::SystemTools::Strucmp(name, "NumberOfImageData") == 0 )
     {
-    int numData = atoi(this->m_CurCharacterData.c_str() );
+    const int numData = atoi(this->m_CurCharacterData.c_str() );
     this->m_ImageData->m_NumberImageData = numData;
     this->m_ImageData->m_ImageFileNames.resize(numData);
     this->m_ImageData->m_SegmentationFileNames.resize(numData);
@@ -137,12 +138,13 @@ MABMISAtlasXMLFileReader::GenerateOutputInformation()
   this->parse();
 
   // validate the results are right.
-  int numRealImages = this->m_OutputObject->m_NumberAllAtlases - this->m_OutputObject->m_NumberSimulatedAtlases;
-  int numSimImages = this->m_OutputObject->m_NumberSimulatedAtlases;
+  const int numRealImages = this->m_OutputObject->m_NumberAllAtlases - this->m_OutputObject->m_NumberSimulatedAtlases;
+  const int numSimImages = this->m_OutputObject->m_NumberSimulatedAtlases;
   this->m_OutputObject->m_SimulatedImageIDs.resize(numSimImages);
   this->m_OutputObject->m_RealImageIDs.resize(numRealImages);
 
-  int countRealImages = 0, countSimImages = 0;
+  int countRealImages = 0;
+  int countSimImages = 0;
   for( int n = 0; n < this->m_OutputObject->m_IsSimulatedImage.size(); n++ )
     {
     if( this->m_OutputObject->m_IsSimulatedImage[n] )
@@ -153,7 +155,6 @@ MABMISAtlasXMLFileReader::GenerateOutputInformation()
         }
       this->m_OutputObject->m_SimulatedImageIDs[countSimImages] = n;
       countSimImages++;
-
       }
     else
       {
@@ -220,8 +221,8 @@ MABMISAtlasXMLFileReader::StartElement( const char *name, const char * *atts )
         }
       }
 
-    m_Atlas->m_AtlasFilenames[id] = fname;
-    m_Atlas->m_AtlasSegmentationFilenames[id] = segFName;
+    m_Atlas->m_AtlasFilenames[id] = itksys::SystemTools::GetRealPath(fname.c_str());
+    m_Atlas->m_AtlasSegmentationFilenames[id] = itksys::SystemTools::GetRealPath(segFName.c_str());
     m_Atlas->m_IsSimulatedImage[id] = isSimulated;
 
     }
@@ -269,7 +270,6 @@ MABMISAtlasXMLFileReader::EndElement(const char *name)
     {
     delete m_OutputObject;
     m_OutputObject = &(*(this->m_Atlas ) );
-
     }
   else
     {
@@ -280,7 +280,14 @@ MABMISAtlasXMLFileReader::EndElement(const char *name)
     }
   if( itksys::SystemTools::Strucmp(name, "AtlasDirectory") == 0 )
     {
-    this->m_Atlas->m_AtlasDirectory = this->m_CurCharacterData;
+    if ( itksys::SystemTools::Strucmp(this->m_CurCharacterData.c_str(),"\n") == 0)
+      {
+      std::cout << "Skipping New Line for empty m_AtlasDirectory" << std::endl;
+      }
+    else
+      {
+      this->m_Atlas->m_AtlasDirectory = itksys::SystemTools::GetRealPath(this->m_CurCharacterData.c_str());
+      }
     }
   if( itksys::SystemTools::Strucmp(name, "NumberOfAtlases") == 0 )
     {

@@ -81,12 +81,6 @@
 
 #include "itkMABMISAtlasXMLFile.h"
 
-#ifdef _WIN32
-#define FILESEP '\\'
-#else
-#define  FILESEP '/'
-#endif
-
 using namespace std;
 
 typedef double CoordinateRepType;
@@ -234,8 +228,8 @@ void strtrim(string& str)
     }
 }
 
-int Testing(itk::MABMISImageData* imageData, itk::MABMISAtlas* atlasTree,
-            std::vector<int> iterations, double sigma)
+static int DoItTesting(itk::MABMISImageData* imageData, itk::MABMISAtlas* atlasTree,
+            const std::vector<int> iterations, const double sigma)
 {
   // Validate the tree size is correct
   if( atlasTree->m_TreeSize != atlasTree->m_Tree.size() ||
@@ -510,15 +504,6 @@ int Testing(itk::MABMISImageData* imageData, itk::MABMISAtlas* atlasTree,
 
 }
 
-template <class T>
-int DoIt( itk::MABMISImageData* imageData, itk::MABMISAtlas* atlasTree,
-          std::vector<int> iterations, double sigma)
-{
-
-  return Testing(imageData, atlasTree, iterations, sigma);
-
-}
-
 int main( int argc, char *argv[] )
 {
   PARSE_ARGS;
@@ -590,7 +575,7 @@ int main( int argc, char *argv[] )
   itk::MABMISAtlas * atlasTree = treeAtlasXMLReader->GetOutputObject();
 
   // set the atlas path as the same path as the xml file.
-  size_t sep = AtlaseTreeXML.find_last_of(FILESEP);
+  const size_t sep = AtlaseTreeXML.find_last_of(FILESEP);
   if( sep != std::string::npos )
     {
     atlasTree->m_AtlasDirectory = AtlaseTreeXML.substr(0, sep + 1) + atlasTree->m_AtlasDirectory;
@@ -614,7 +599,8 @@ int main( int argc, char *argv[] )
   treeoperator = TreeOperationType::New();
   basicoperator = BasicOperationFilterType::New();
 
-  int retVal = DoIt<unsigned short>( inputImageData, atlasTree, iterations, SmoothingKernelSize);
+  const int retVal = DoItTesting( inputImageData,
+    atlasTree, iterations, SmoothingKernelSize);
 
   delete inputImageData;
   delete atlasTree;
