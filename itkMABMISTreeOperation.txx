@@ -42,7 +42,7 @@ template <class TInputImage, class TOutputImage>
 vnl_vector<int>
 MABMISTreeOperation<TInputImage, TOutputImage>
 ::BuildCombinativeTree(int root, std::vector<std::string> atlasfilenames, int tree_size, vnl_vector<int> tree){
-  
+
 	vnl_matrix<double> distanceMatrix (tree_size, tree_size);
 
 	for (int i = 0; i < tree_size; i++)
@@ -101,14 +101,14 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 		// find the sample index to be attached
 		int* index_test = new int[sample_left_size];
 		double* dist_temp2 = new double[sample_left_size];
-		for (int j = 0; j < sample_left_size; j++) 
+		for (int j = 0; j < sample_left_size; j++)
 		{
 			index_test[j] = j;
 			dist_temp2[j] = test2train_min_dist[j];
 		}
 		basicoperator->bubbleSort(dist_temp2, index_test, sample_left_size);
 
-		// attach it to the tree 
+		// attach it to the tree
 		int sample_to_attach = sample_cur[index_test[0]];
 		int best_match_atlas = test2train_min_index[index_test[0]];// parent node
 		itree[sample_to_attach] = best_match_atlas;
@@ -152,7 +152,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
   string distFileName;
   distFileName = "distance_matrix_generateMSTFromMatrix.txt";
       basicoperator->SaveMatrix2File(curDistance, nnode, nnode, distFileName);
-  
+
 
 
 	// implement Prim algorithm
@@ -211,11 +211,12 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 	/////////////////////////////////////////////
 	// rebuild the distance matrix based on connectivity on MST
 	vnl_matrix<double> curDistanceTemp (nnode, nnode);
+        const double big_number = sqrt(DBL_MAX);
 	for (int i = 0; i < nnode; i++)
-	{		
+	{
 		for (int j = 0; j < nnode; j++)
 			if (i != j)
-			  curDistanceTemp.put (i,j,DBL_MAX);
+			  curDistanceTemp.put (i,j,big_number);
 			else
 			  curDistanceTemp.put(i,j,0);
 	}
@@ -296,7 +297,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
   string distFileName;
   distFileName = "distance_matrix_generateMSTFromMatrixWithFixedRoot.txt";
       basicoperator->SaveMatrix2File(curDistance, nnode, nnode, distFileName);
-  
+
 
 	// implement Prim algorithm
 	int* tree_v1 = new int[nnode-1];
@@ -353,12 +354,13 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 	// rebuild the distance matrix based on connectivity on MST
 
 	double** curDistanceTemp = new double*[nnode];
+        const double big_number = sqrt(DBL_MAX);
 	for (int i = 0; i < nnode; i++)
 	{
 		curDistanceTemp[i] = new double[nnode];
 		for (int j = 0; j < nnode; j++)
 			if (i != j)
-				curDistanceTemp[i][j] = DBL_MAX;
+				curDistanceTemp[i][j] = big_number;
 			else
 				curDistanceTemp[i][j] = 0;
 	}
@@ -404,8 +406,8 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 	// for debugging
 
 	SaveTreeWithInfo(treeMST, nnode, "treeMST.txt");
-       
-	
+
+
 
 
 	// generate tree based on MST and root
@@ -442,7 +444,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 	for(int i = 0; i < treeSize; i++)
 	{
 		outfile <<  ' ' ;
-		outfile << std::right << std::setw(3) << i; 
+		outfile << std::right << std::setw(3) << i;
 		outfile << ' ';
 		outfile << std::right << std::fixed << std::setw(8) << std::setprecision(2) << tree[i];
 		outfile << std::endl;
@@ -459,7 +461,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 ::FindCenterBasedOnShortestTotalDistance(vnl_matrix<double> distanceMatrix, int matrixSize, int &center)
 {
 //   //for debugging
-//	cerr << "FindCenterBasedOnShortestTotalDistance:distanceMatrix: " << endl;	
+//	cerr << "FindCenterBasedOnShortestTotalDistance:distanceMatrix: " << endl;
 //	for (int i = 0; i < matrixSize; i++)
 //  for (int j = 0; j < matrixSize; j++)
 //	    cerr << distanceMatrix[i][j] <<" " << endl;
@@ -570,7 +572,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
   // for debugging
   //for (int i = 0; i < treeSize; i++)
   //  cerr << "**" << tree[i] << " " << endl;
-     
+
 	for(int i = 0; i < treeSize; i++)
 	{
 		if (tree[i] == -1)
@@ -646,14 +648,14 @@ MABMISTreeOperation<TInputImage, TOutputImage>
   //  cerr << "t " << tree[i] << endl;
 
 
-  
-  
+
+
 	// to check if there is one and only one root
 	int root;
 	int root_num = 0;
 	for (int i = 0; i < tree_size; i++)
 	{
-		if (tree[i] == -1)	
+		if (tree[i] == -1)
 		{
 			root = i;
 			root_num++;
@@ -677,7 +679,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 		int cur_node = i;
 		while (j < max_step)
 		{
-			if (cur_node == root) 
+			if (cur_node == root)
 			{
 				isRooted = true;
 				break;
