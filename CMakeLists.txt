@@ -15,6 +15,12 @@ endif()
 if(NOT Slicer_SOURCE_DIR)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
+else()
+  #-----------------------------------------------------------------------------
+  find_package(SlicerExecutionModel REQUIRED GenerateCLP)
+  include(${GenerateCLP_USE_FILE})
+  include(${SlicerExecutionModel_USE_FILE})
+  include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -31,6 +37,9 @@ SEMMacroBuildCLI(
   TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
   ADDITIONAL_SRCS
 	itkMABMISAtlasXMLFile.cxx
+        INSTALL_RUNTIME_DESTINATION bin
+        INSTALL_LIBRARY_DESTINATION lib
+        INSTALL_ARCHIVE_DESTINATION lib
   #EXECUTABLE_ONLY
   )
 
@@ -44,6 +53,9 @@ SEMMacroBuildCLI(
   TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
   ADDITIONAL_SRCS
 	itkMABMISAtlasXMLFile.cxx
+        INSTALL_RUNTIME_DESTINATION bin
+        INSTALL_LIBRARY_DESTINATION lib
+        INSTALL_ARCHIVE_DESTINATION lib
   #EXECUTABLE_ONLY
   )
 
