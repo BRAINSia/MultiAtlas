@@ -125,7 +125,7 @@ class MABMISAtlasXMLFileReader :
 public:
   /** Standard typedefs */
   typedef MABMISAtlasXMLFileReader Self;
-  typedef XMLReader                Superclass;
+  typedef XMLReader<MABMISAtlas>   Superclass;
   typedef SmartPointer<Self>       Pointer;
 
   /** Run-time type information (and related methods). */
