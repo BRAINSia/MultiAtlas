@@ -77,7 +77,7 @@ class MABMISImageDataXMLFileReader :
 public:
   /** Standard typedefs */
   typedef MABMISImageDataXMLFileReader Self;
-  typedef XMLReader                    Superclass;
+  typedef XMLReader<MABMISImageData>   Superclass;
   typedef SmartPointer<Self>           Pointer;
 
   /** Run-time type information (and related methods). */
