@@ -86,7 +86,7 @@ MABMISBasicOperationFilter<TInputImage, TOutputImage>
 template <class TInputImage, class TOutputImage>
 void
 MABMISBasicOperationFilter<TInputImage, TOutputImage>
-::myitoa(int num, std::string& str, int digit)
+::myitoa(int num, std::string& str, int)
 {
   str = "";
 

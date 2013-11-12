@@ -11,7 +11,7 @@ template <class TInputImage, class TOutputImage>
 MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 ::MABMISImageRegistrationFilter()
 {
-  dfoperator = DeformationFieldOperationType::New();
+  dfoperator = DisplacementFieldOperationType::New();
   imgoperator = ImageOperationType::New();
 }
 
@@ -64,12 +64,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 
   // Set up the demons filter
   typedef itk::PDEDeformableRegistrationFilter
-    <InternalImageType, InternalImageType, DeformationFieldType>   BaseRegistrationFilterType;
+    <InternalImageType, InternalImageType, DisplacementFieldType>   BaseRegistrationFilterType;
   BaseRegistrationFilterType::Pointer filter;
 
   // s <- s o exp(u) (Diffeomorphic demons)
   typedef itk::DiffeomorphicDemonsRegistrationFilter
-    <InternalImageType, InternalImageType, DeformationFieldType>
+    <InternalImageType, InternalImageType, DisplacementFieldType>
     ActualRegistrationFilterType;
   typedef ActualRegistrationFilterType::GradientType GradientType;
 
@@ -85,12 +85,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
   // float sigmaDef = 1.5;
   if( sigmaDef > 0.1 )
     {
-    filter->SmoothDeformationFieldOn();
+    filter->SmoothDisplacementFieldOn();
     filter->SetStandardDeviations( sigmaDef );
     }
   else
     {
-    filter->SmoothDeformationFieldOff();
+    filter->SmoothDisplacementFieldOff();
     }
 
   // set up smoothing kernel for update field
@@ -109,10 +109,10 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 
   // Set up the multi-resolution filter
   typedef itk::MultiResolutionPDEDeformableRegistration<
-      InternalImageType, InternalImageType, DeformationFieldType, InternalPixelType>   MultiResRegistrationFilterType;
+      InternalImageType, InternalImageType, DisplacementFieldType, InternalPixelType>   MultiResRegistrationFilterType;
   MultiResRegistrationFilterType::Pointer multires = MultiResRegistrationFilterType::New();
 
-  typedef itk::VectorLinearInterpolateNearestNeighborExtrapolateImageFunction<DeformationFieldType,
+  typedef itk::VectorLinearInterpolateNearestNeighborExtrapolateImageFunction<DisplacementFieldType,
                                                                               double> FieldInterpolatorType;
 
   FieldInterpolatorType::Pointer VectorInterpolator = FieldInterpolatorType::New();
@@ -153,12 +153,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
     }
 
   // write deformation field into a file
-  DeformationFieldWriterType::Pointer fieldWriter = DeformationFieldWriterType::New();
+  DisplacementFieldWriterType::Pointer fieldWriter = DisplacementFieldWriterType::New();
   fieldWriter->SetFileName( deformationFieldFileName );
   fieldWriter->SetInput( multires->GetOutput() );
   fieldWriter->Update();
 
-  dfoperator->ApplyDeformationFieldAndWriteWithTypeWithFileNames(movingImageFileName,
+  dfoperator->ApplyDisplacementFieldAndWriteWithTypeWithFileNames(movingImageFileName,
                                                                  deformationFieldFileName, deformedImageFileName, true);
 
   //// write deformed image
@@ -170,7 +170,7 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
   // warper->SetOutputSpacing( fixedImageReader->GetOutput()->GetSpacing() );
 //	warper->SetOutputOrigin( fixedImageReader->GetOutput()->GetOrigin() );
 // warper->SetOutputDirection( fixedImageReader->GetOutput()->GetDirection() );
-// warper->SetDeformationField( multires->GetOutput() );
+// warper->SetDisplacementField( multires->GetOutput() );
 // CharImageWriterType::Pointer      writer =  CharImageWriterType::New();
 //	Internal2CharCastFilterType::Pointer  caster =  Internal2CharCastFilterType::New();
 //	writer->SetFileName( deformedImageFileName );
@@ -185,15 +185,15 @@ template <class TInputImage, class TOutputImage>
 int
 MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 ::DiffeoDemonsRegistrationWithInitialWithParameters(std::string  fixedImageFileName, std::string movingImageFileName,
-                                                    std::string initDeformationFieldFileName, std::string deformedImageFileName,
+                                                    std::string initDisplacementFieldFileName, std::string deformedImageFileName,
                                                     std::string deformationFieldFileName, double sigmaDef, bool doHistMatch,
                                                     std::vector<int> iterInResolutions)
 {
   int res = iterInResolutions.size();
   // read initial deformation field file
-  DeformationFieldType::Pointer initDeformationField = 0;
+  DisplacementFieldType::Pointer initDisplacementField = 0;
 
-  dfoperator->ReadDeformationField(initDeformationFieldFileName, initDeformationField);
+  dfoperator->ReadDisplacementField(initDisplacementFieldFileName, initDisplacementField);
 
   // read fixed and moving images
   InternalImageReaderType::Pointer fixedImageReader   = InternalImageReaderType::New();
@@ -215,12 +215,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 
   // Set up the demons filter
   typedef itk::PDEDeformableRegistrationFilter
-    <InternalImageType, InternalImageType, DeformationFieldType>   BaseRegistrationFilterType;
+    <InternalImageType, InternalImageType, DisplacementFieldType>   BaseRegistrationFilterType;
   BaseRegistrationFilterType::Pointer filter;
 
   // s <- s o exp(u) (Diffeomorphic demons)
   typedef itk::DiffeomorphicDemonsRegistrationFilter
-    <InternalImageType, InternalImageType, DeformationFieldType>
+    <InternalImageType, InternalImageType, DisplacementFieldType>
     ActualRegistrationFilterType;
   typedef ActualRegistrationFilterType::GradientType GradientType;
 
@@ -236,12 +236,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
   // float sigmaDef = 1.5;
   if( sigmaDef > 0.1 )
     {
-    filter->SmoothDeformationFieldOn();
+    filter->SmoothDisplacementFieldOn();
     filter->SetStandardDeviations( sigmaDef );
     }
   else
     {
-    filter->SmoothDeformationFieldOff();
+    filter->SmoothDisplacementFieldOff();
     }
 
   // set up smoothing kernel for update field
@@ -260,10 +260,10 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
 
   // Set up the multi-resolution filter
   typedef itk::MultiResolutionPDEDeformableRegistration<
-      InternalImageType, InternalImageType, DeformationFieldType, InternalPixelType>   MultiResRegistrationFilterType;
+      InternalImageType, InternalImageType, DisplacementFieldType, InternalPixelType>   MultiResRegistrationFilterType;
   MultiResRegistrationFilterType::Pointer multires = MultiResRegistrationFilterType::New();
 
-  typedef itk::VectorLinearInterpolateNearestNeighborExtrapolateImageFunction<DeformationFieldType,
+  typedef itk::VectorLinearInterpolateNearestNeighborExtrapolateImageFunction<DisplacementFieldType,
                                                                               double> FieldInterpolatorType;
 
   FieldInterpolatorType::Pointer VectorInterpolator = FieldInterpolatorType::New();
@@ -292,7 +292,7 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
     }
 
   // set initial
-  multires->SetArbitraryInitialDeformationField( initDeformationField );
+  multires->SetArbitraryInitialDisplacementField( initDisplacementField );
 
   // Compute the deformation field
   try
@@ -307,12 +307,12 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
     }
 
   // write deformation field into a file
-  DeformationFieldWriterType::Pointer fieldWriter = DeformationFieldWriterType::New();
+  DisplacementFieldWriterType::Pointer fieldWriter = DisplacementFieldWriterType::New();
   fieldWriter->SetFileName( deformationFieldFileName );
   fieldWriter->SetInput( multires->GetOutput() );
   fieldWriter->Update();
 
-  dfoperator->ApplyDeformationFieldAndWriteWithTypeWithFileNames(movingImageFileName,
+  dfoperator->ApplyDisplacementFieldAndWriteWithTypeWithFileNames(movingImageFileName,
                                                                  deformationFieldFileName, deformedImageFileName, true);
 
   //// write deformed image
@@ -324,7 +324,7 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
   // warper->SetOutputSpacing( fixedImageReader->GetOutput()->GetSpacing() );
   // warper->SetOutputOrigin( fixedImageReader->GetOutput()->GetOrigin() );
   // warper->SetOutputDirection( fixedImageReader->GetOutput()->GetDirection() );
-  // warper->SetDeformationField( multires->GetOutput() );
+  // warper->SetDisplacementField( multires->GetOutput() );
   // CharImageWriterType::Pointer      writer =  CharImageWriterType::New();
   // Internal2CharCastFilterType::Pointer  caster =  Internal2CharCastFilterType::New();
   // writer->SetFileName( deformedImageFileName );
@@ -333,7 +333,7 @@ MABMISImageRegistrationFilter<TInputImage, TOutputImage>
   // writer->Update();
 
   // if (isCompressed)
-  //	CompressDeformationField2Short(deformationFieldFileName);
+  //	CompressDisplacementField2Short(deformationFieldFileName);
   return 0;
 }
 } // namespace Statistics

@@ -17,7 +17,7 @@ template <class TInputImage, class TOutputImage>
 MABMISSimulateData<TInputImage, TOutputImage>
 ::MABMISSimulateData()
 {
-  dfoperator = DeformationFieldOperationType::New();
+  dfoperator = DisplacementFieldOperationType::New();
   imgoperator = ImageOperationType::New();
   basicoperator = BasicOperationType::New();
 }
@@ -44,7 +44,7 @@ MABMISSimulateData<TInputImage, TOutputImage>
 {
   bool doPCATraining = true;
   int  sampleRate = 2;
-  bool doResampleDeformationField = true;
+  bool doResampleDisplacementField = true;
   int  size_x = 0; int size_y = 0; int size_z = 0;
   int  size_xn = 0; int size_yn = 0; int size_zn = 0;
   int  size_dfn = 0; // size of sub-sampled deformation field
@@ -73,19 +73,19 @@ MABMISSimulateData<TInputImage, TOutputImage>
   ///////////////////////////////////////
   // initialize
 
-  DeformationFieldType::Pointer curDeformationField = 0;
+  DisplacementFieldType::Pointer curDisplacementField = 0;
 
-  dfoperator->ReadDeformationField(deformationFieldFileNames[0], curDeformationField);
+  dfoperator->ReadDisplacementField(deformationFieldFileNames[0], curDisplacementField);
 
-  DeformationFieldType::SizeType im_size = curDeformationField->GetLargestPossibleRegion().GetSize();
+  DisplacementFieldType::SizeType im_size = curDisplacementField->GetLargestPossibleRegion().GetSize();
   size_x = im_size[0]; size_y = im_size[1]; size_z = im_size[2];
   size_xn =
     (size_x - 1) / sampleRate + 1; size_yn = (size_y - 1) / sampleRate + 1; size_zn = (size_z - 1) / sampleRate + 1;
   size_dfn = (size_xn) * (size_yn) * (size_zn) * 3;
 
-  df_spacing = curDeformationField->GetSpacing();
-  df_direction = curDeformationField->GetDirection();
-  df_origin = curDeformationField->GetOrigin();
+  df_spacing = curDisplacementField->GetSpacing();
+  df_direction = curDisplacementField->GetDirection();
+  df_origin = curDisplacementField->GetOrigin();
 
   // initialize
   ////////////////////////////////////////
@@ -102,17 +102,17 @@ MABMISSimulateData<TInputImage, TOutputImage>
     std::string deformationFieldFileName;
     deformationFieldFileName = deformationFieldFileNames[i];
 
-    std::string resampledDeformationFieldFileName;
+    std::string resampledDisplacementFieldFileName;
     std::string tempstring;
     tempstring = deformationFieldFileNames[i];
 
     tempstring.erase(tempstring.end() - 4, tempstring.end() );
-    resampledDeformationFieldFileName.append(tempstring);
-    resampledDeformationFieldFileName.append("_sub.nii.gz");
+    resampledDisplacementFieldFileName.append(tempstring);
+    resampledDisplacementFieldFileName.append("_sub.nii.gz");
 
-    if( doResampleDeformationField )
+    if( doResampleDisplacementField )
       {
-      dfoperator->DownResampleDeformationField(deformationFieldFileName, resampledDeformationFieldFileName, sampleRate);
+      dfoperator->DownResampleDisplacementField(deformationFieldFileName, resampledDisplacementFieldFileName, sampleRate);
       }
     }
 
@@ -124,16 +124,16 @@ MABMISSimulateData<TInputImage, TOutputImage>
     // build all vectors from deformation fields
     for( int i = 0; i < numFiles; ++i )
       {
-      std::string resampledDeformationFieldFileName;
+      std::string resampledDisplacementFieldFileName;
       std::string tempstring;
       tempstring = deformationFieldFileNames[i];
 
       tempstring.erase(tempstring.end() - 4, tempstring.end() );
-      resampledDeformationFieldFileName.append(tempstring);
-      resampledDeformationFieldFileName.append("_sub.nii.gz");
+      resampledDisplacementFieldFileName.append(tempstring);
+      resampledDisplacementFieldFileName.append("_sub.nii.gz");
 
       float* df_arr = new float[size_dfn];
-      LoadIntoArray(resampledDeformationFieldFileName, df_arr);
+      LoadIntoArray(resampledDisplacementFieldFileName, df_arr);
       vnl_vector<float> df_cur(size_dfn);
       df_cur.copy_in(df_arr);
 
@@ -233,32 +233,32 @@ MABMISSimulateData<TInputImage, TOutputImage>
         }
 
       std::string index_string;    basicoperator->myitoa( i, index_string, 3 );
-      std::string intermediateSubDeformationFieldFileName = "inter_deform_sub_000.nii.gz";
-      intermediateSubDeformationFieldFileName.erase(
-        intermediateSubDeformationFieldFileName.end() - 7, intermediateSubDeformationFieldFileName.end() );
-      intermediateSubDeformationFieldFileName.append(index_string);
-      intermediateSubDeformationFieldFileName.append(".nii.gz");
-      intermediateSubDeformationFieldFileName = tempFolder + FILESEP + intermediateSubDeformationFieldFileName;
+      std::string intermediateSubDisplacementFieldFileName = "inter_deform_sub_000.nii.gz";
+      intermediateSubDisplacementFieldFileName.erase(
+        intermediateSubDisplacementFieldFileName.end() - 7, intermediateSubDisplacementFieldFileName.end() );
+      intermediateSubDisplacementFieldFileName.append(index_string);
+      intermediateSubDisplacementFieldFileName.append(".nii.gz");
+      intermediateSubDisplacementFieldFileName = tempFolder + FILESEP + intermediateSubDisplacementFieldFileName;
 
-      std::string intermediateDeformationFieldFileName = "inter_deform_000.nii.gz";
-      intermediateDeformationFieldFileName.erase(
-        intermediateDeformationFieldFileName.end() - 7, intermediateDeformationFieldFileName.end() );
-      intermediateDeformationFieldFileName.append(index_string);
-      intermediateDeformationFieldFileName.append(".nii.gz");
-      intermediateDeformationFieldFileName = tempFolder + FILESEP + intermediateDeformationFieldFileName;
+      std::string intermediateDisplacementFieldFileName = "inter_deform_000.nii.gz";
+      intermediateDisplacementFieldFileName.erase(
+        intermediateDisplacementFieldFileName.end() - 7, intermediateDisplacementFieldFileName.end() );
+      intermediateDisplacementFieldFileName.append(index_string);
+      intermediateDisplacementFieldFileName.append(".nii.gz");
+      intermediateDisplacementFieldFileName = tempFolder + FILESEP + intermediateDisplacementFieldFileName;
 
-      SaveFromArray(intermediateSubDeformationFieldFileName, df_intermediate_sub.data_block(), size_xn, size_yn,
+      SaveFromArray(intermediateSubDisplacementFieldFileName, df_intermediate_sub.data_block(), size_xn, size_yn,
                     size_zn);
 
       // upSample the above deformation field and save
-      if( doResampleDeformationField )
+      if( doResampleDisplacementField )
         {
         dfoperator->SetImx(size_x);
         dfoperator->SetImy(size_y);
         dfoperator->SetImz(size_z);
 
-        dfoperator->UpResampleDeformationField(intermediateSubDeformationFieldFileName,
-                                               intermediateDeformationFieldFileName, sampleRate);
+        dfoperator->UpResampleDisplacementField(intermediateSubDisplacementFieldFileName,
+                                               intermediateDisplacementFieldFileName, sampleRate);
         }
 
       std::string intermediateTemplateFileName = "inter_template_000.nii.gz";
@@ -268,35 +268,35 @@ MABMISSimulateData<TInputImage, TOutputImage>
       intermediateTemplateFileName = tempFolder + FILESEP + intermediateTemplateFileName;
 
       // reverse deformation field
-      std::string intermediateReversedDeformationFieldFileName = "inter_deform_reverse_000.nii.gz";
-      intermediateReversedDeformationFieldFileName.erase(
-        intermediateReversedDeformationFieldFileName.end() - 7,
-        intermediateReversedDeformationFieldFileName.end() );
-      intermediateReversedDeformationFieldFileName.append(index_string);
-      intermediateReversedDeformationFieldFileName.append(".nii.gz");
-      intermediateReversedDeformationFieldFileName = tempFolder + FILESEP
-        + intermediateReversedDeformationFieldFileName;
+      std::string intermediateReversedDisplacementFieldFileName = "inter_deform_reverse_000.nii.gz";
+      intermediateReversedDisplacementFieldFileName.erase(
+        intermediateReversedDisplacementFieldFileName.end() - 7,
+        intermediateReversedDisplacementFieldFileName.end() );
+      intermediateReversedDisplacementFieldFileName.append(index_string);
+      intermediateReversedDisplacementFieldFileName.append(".nii.gz");
+      intermediateReversedDisplacementFieldFileName = tempFolder + FILESEP
+        + intermediateReversedDisplacementFieldFileName;
 
-      DeformationFieldType::Pointer deformationField = 0;
-      if( dfoperator->ReadDeformationField(intermediateDeformationFieldFileName, deformationField) != 0 )
+      DisplacementFieldType::Pointer deformationField = 0;
+      if( dfoperator->ReadDisplacementField(intermediateDisplacementFieldFileName, deformationField) != 0 )
         {
-        std::cerr << " Cannot read deformation field: " << intermediateDeformationFieldFileName << std::endl;
+        std::cerr << " Cannot read deformation field: " << intermediateDisplacementFieldFileName << std::endl;
         std::cerr << "Please verify the file exists. " << std::endl;
         return -1;
         }
 
-      DeformationFieldType::Pointer reversedDeformationField = DeformationFieldType::New();
-      reversedDeformationField->SetRegions(deformationField->GetLargestPossibleRegion() );
-      reversedDeformationField->SetSpacing(deformationField->GetSpacing() );
-      reversedDeformationField->SetDirection(deformationField->GetDirection() );
-      reversedDeformationField->SetOrigin(deformationField->GetOrigin() );
-      reversedDeformationField->Allocate();
-      dfoperator->InverseDeformationField3D(deformationField, reversedDeformationField);
-      dfoperator->WriteDeformationField(intermediateReversedDeformationFieldFileName, reversedDeformationField);
+      DisplacementFieldType::Pointer reversedDisplacementField = DisplacementFieldType::New();
+      reversedDisplacementField->SetRegions(deformationField->GetLargestPossibleRegion() );
+      reversedDisplacementField->SetSpacing(deformationField->GetSpacing() );
+      reversedDisplacementField->SetDirection(deformationField->GetDirection() );
+      reversedDisplacementField->SetOrigin(deformationField->GetOrigin() );
+      reversedDisplacementField->Allocate();
+      dfoperator->InverseDisplacementField3D(deformationField, reversedDisplacementField);
+      dfoperator->WriteDisplacementField(intermediateReversedDisplacementFieldFileName, reversedDisplacementField);
 
       // apply intermediate deformation field to get intermediate template
       InternalImageType::Pointer intermediateTemplateImage = 0;
-      dfoperator->ApplyDeformationField(templateImage, reversedDeformationField, intermediateTemplateImage, true);
+      dfoperator->ApplyDisplacementField(templateImage, reversedDisplacementField, intermediateTemplateImage, true);
       // write image
       imgoperator->WriteImage(intermediateTemplateFileName, intermediateTemplateImage);
 
@@ -422,12 +422,12 @@ MABMISSimulateData<TInputImage, TOutputImage>
 
   // save deformation field array into file
   // create the resampled image
-  DeformationFieldType::Pointer   deformationField = DeformationFieldType::New();
-  DeformationFieldType::IndexType start;
+  DisplacementFieldType::Pointer   deformationField = DisplacementFieldType::New();
+  DisplacementFieldType::IndexType start;
   start[0] = 0; start[1] = 0; start[2] = 0;
-  DeformationFieldType::SizeType size;
+  DisplacementFieldType::SizeType size;
   size[0] = sx; size[1] = sy; size[2] = sz;
-  DeformationFieldType::RegionType region;
+  DisplacementFieldType::RegionType region;
   region.SetSize(size);
   region.SetIndex(start);
 
@@ -442,7 +442,7 @@ MABMISSimulateData<TInputImage, TOutputImage>
 
   deformationField->Allocate();
 
-  DeformationFieldIteratorType itDF(deformationField, deformationField->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType itDF(deformationField, deformationField->GetLargestPossibleRegion() );
   VectorPixelType              vectorPixel;
   int                          index = 0;
   for( itDF.GoToBegin(); !itDF.IsAtEnd(); ++itDF )
@@ -454,7 +454,7 @@ MABMISSimulateData<TInputImage, TOutputImage>
     index += 3;
     }
 
-  dfoperator->WriteDeformationField(deformationFieldFileName, deformationField);
+  dfoperator->WriteDisplacementField(deformationFieldFileName, deformationField);
 
   return;
 }
@@ -462,17 +462,15 @@ MABMISSimulateData<TInputImage, TOutputImage>
 template <class TInputImage, class TOutputImage>
 void
 MABMISSimulateData<TInputImage, TOutputImage>
-::LoadIntoArray(std::string resampledDeformationFieldFileName, float* df_vector)
+::LoadIntoArray(std::string resampledDisplacementFieldFileName, float* df_vector)
 {
   // read deformation field and load it into array
-  DeformationFieldType::Pointer dfImage = 0;
+  DisplacementFieldType::Pointer dfImage = 0;
 
-  dfoperator->ReadDeformationField(resampledDeformationFieldFileName, dfImage);
-
-  DeformationFieldType::SizeType im_size = dfImage->GetLargestPossibleRegion().GetSize();
+  dfoperator->ReadDisplacementField(resampledDisplacementFieldFileName, dfImage);
 
   // load original image
-  DeformationFieldIteratorType itOrigin(dfImage, dfImage->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType itOrigin(dfImage, dfImage->GetLargestPossibleRegion() );
   int index = 0;
   for( itOrigin.GoToBegin(); !itOrigin.IsAtEnd(); ++itOrigin )
     {

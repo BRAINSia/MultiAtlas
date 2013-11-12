@@ -1,5 +1,5 @@
-#ifndef __itkMABMISDeformationFieldFilter_h
-#define __itkMABMISDeformationFieldFilter_h
+#ifndef __itkMABMISDisplacementFieldFilter_h
+#define __itkMABMISDisplacementFieldFilter_h
 
 #include <itkImage.h>
 #include <itkImageToImageFilter.h>
@@ -11,8 +11,6 @@
 #include "itkImage.h"
 #include "itkWarpImageFilter.h"
 #include "itkAddImageFilter.h"
-#include "itkDivideByConstantImageFilter.h"
-#include "itkMultiplyByConstantImageFilter.h"
 
 // interpolator
 #include "itkLinearInterpolateImageFunction.h"
@@ -28,11 +26,11 @@ namespace itk
 namespace Statistics
 {
 template <class TInputImage, class TOutputImage>
-class MABMISDeformationFieldFilter : public ImageToImageFilter<TInputImage, TOutputImage>
+class MABMISDisplacementFieldFilter : public ImageToImageFilter<TInputImage, TOutputImage>
 {
 public:
 
-  typedef MABMISDeformationFieldFilter                  Self;
+  typedef MABMISDisplacementFieldFilter                  Self;
   typedef ImageToImageFilter<TInputImage, TOutputImage> Superclass;
   typedef SmartPointer<Self>                            Pointer;
   typedef SmartPointer<const Self>                      ConstPointer;
@@ -53,22 +51,18 @@ public:
   typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
   typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
   typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-  typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+  typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
-  typedef itk::ImageFileReader<DeformationFieldType> DeformationFieldReaderType;
-  typedef itk::ImageFileWriter<DeformationFieldType> DeformationFieldWriterType;
+  typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
+  typedef itk::ImageFileWriter<DisplacementFieldType> DisplacementFieldWriterType;
 
-  typedef itk::WarpVectorImageFilter<DeformationFieldType, DeformationFieldType,
-                                     DeformationFieldType>         WarpVectorFilterType;
-  typedef itk::MultiplyByConstantImageFilter<DeformationFieldType, float,
-                                             DeformationFieldType> MultiplyDeformationFieldFilterType;
-  typedef itk::DivideByConstantImageFilter<DeformationFieldType, float,
-                                           DeformationFieldType>   DivideDeformationFieldFilterType;
-  typedef itk::AddImageFilter<DeformationFieldType, DeformationFieldType,
-                              DeformationFieldType>                AddImageFilterType;
+  typedef itk::WarpVectorImageFilter<DisplacementFieldType, DisplacementFieldType,
+                                     DisplacementFieldType>         WarpVectorFilterType;
+  typedef itk::AddImageFilter<DisplacementFieldType, DisplacementFieldType,
+                              DisplacementFieldType>                AddImageFilterType;
 
 // basic iterator type
-  typedef itk::ImageRegionIterator<DeformationFieldType> DeformationFieldIteratorType;
+  typedef itk::ImageRegionIterator<DisplacementFieldType> DisplacementFieldIteratorType;
   typedef itk::ImageRegionIterator<InternalImageType>    InternalImageIteratorType;
   typedef itk::ImageRegionIterator<CharImageType>        CharImageIteratorType;
 
@@ -76,7 +70,7 @@ public:
   typedef itk::LinearInterpolateImageFunction<InternalImageType, double>          InternalLinearInterpolatorType;
   typedef itk::NearestNeighborInterpolateImageFunction<InternalImageType, double> InternalNNInterpolatorType;
 
-  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DeformationFieldType> InternalWarpFilterType;
+  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DisplacementFieldType> InternalWarpFilterType;
 
   typedef itk::Statistics::MABMISImageOperationFilter<ImageType, ImageType> ImageOperationType;
   typename ImageOperationType::Pointer imgoperator;
@@ -85,59 +79,59 @@ public:
   itkNewMacro(Self);
 
   /** Run-time type information (and related methods). */
-  itkTypeMacro(MABMISDeformationFieldFilter, ImageToImageFilter);
+  itkTypeMacro(MABMISDisplacementFieldFilter, ImageToImageFilter);
 
-  DeformationFieldType::SpacingType   df_spacing;
-  DeformationFieldType::DirectionType df_direction;
-  DeformationFieldType::PointType     df_origin;
+  DisplacementFieldType::SpacingType   df_spacing;
+  DisplacementFieldType::DirectionType df_direction;
+  DisplacementFieldType::PointType     df_origin;
 
-  int ReadDeformationField(std::string filename, DeformationFieldType::Pointer & deformationfield);
+  int ReadDisplacementField(std::string filename, DisplacementFieldType::Pointer & deformationfield);
 
-  void WriteDeformationField(std::string  filename, DeformationFieldType::Pointer deformationfield);
+  void WriteDisplacementField(std::string  filename, DisplacementFieldType::Pointer deformationfield);
 
-  void ComposeDeformationFieldsAndSave(std::string inputDeformationFieldFileName, std::string deformationFieldFileName,
-                                       std::string composedDeformationFieldFileName);
+  void ComposeDisplacementFieldsAndSave(std::string inputDisplacementFieldFileName, std::string deformationFieldFileName,
+                                       std::string composedDisplacementFieldFileName);
 
-  void ComposeDeformationFields(DeformationFieldType::Pointer input, DeformationFieldType::Pointer deformationField,
-                                DeformationFieldType::Pointer & composedDeformationField);
+  void ComposeDisplacementFields(DisplacementFieldType::Pointer input, DisplacementFieldType::Pointer deformationField,
+                                DisplacementFieldType::Pointer & composedDisplacementField);
 
-  void InverseDeformationField3D(DeformationFieldType::Pointer deformationField,
-                                 DeformationFieldType::Pointer & deformationFieldInverse);
+  void InverseDisplacementField3D(DisplacementFieldType::Pointer deformationField,
+                                 DisplacementFieldType::Pointer & deformationFieldInverse);
 
-  void ApplyDeformationField(InternalImageType::Pointer movingImage, DeformationFieldType::Pointer deformationField,
+  void ApplyDisplacementField(InternalImageType::Pointer movingImage, DisplacementFieldType::Pointer deformationField,
                              InternalImageType::Pointer & deformedImage, bool isLinearInterpolator);
 
-  void ApplyDeformationFieldAndWriteWithFileNames(std::string movingImageName, std::string deformationFieldFileName,
+  void ApplyDisplacementFieldAndWriteWithFileNames(std::string movingImageName, std::string deformationFieldFileName,
                                                   std::string deformedImageName, bool isLinearInterpolator);
 
-  void ApplyDeformationFieldAndWriteWithTypeWithFileNames(std::string  movingImageFileName,
+  void ApplyDisplacementFieldAndWriteWithTypeWithFileNames(std::string  movingImageFileName,
                                                           std::string deformationFieldFileName,
                                                           std::string deformedImageFileName, bool isLinear);
 
-  void DownResampleDeformationField(std::string deformationFieldFileName, std::string resampledDeformationFieldFileName,
+  void DownResampleDisplacementField(std::string deformationFieldFileName, std::string resampledDisplacementFieldFileName,
                                     int sampleRate);
 
-  void UpResampleDeformationField(std::string deformationFieldFileName, std::string  resampledDeformationFieldFileName,
+  void UpResampleDisplacementField(std::string deformationFieldFileName, std::string  resampledDisplacementFieldFileName,
                                   int sampleRate);
 
   itkSetMacro(Imx, int);
   itkSetMacro(Imy, int);
   itkSetMacro(Imz, int);
 private:
-  MABMISDeformationFieldFilter(const Self &); // purposely not implemented
+  MABMISDisplacementFieldFilter(const Self &); // purposely not implemented
   void operator=(const Self &);               // purposely not implemented
 
   int m_Imx;
   int m_Imy;
   int m_Imz;
 protected:
-  MABMISDeformationFieldFilter();
-  ~MABMISDeformationFieldFilter();
+  MABMISDisplacementFieldFilter();
+  ~MABMISDisplacementFieldFilter();
   void PrintSelf(std::ostream& os, Indent indent) const;
 };
 } // namespace itk
 } // namespace Statistics
 
-#include "itkMABMISDeformationFieldFilter.hxx"
+#include "itkMABMISDisplacementFieldFilter.hxx"
 
 #endif

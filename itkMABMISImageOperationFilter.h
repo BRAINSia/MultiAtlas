@@ -47,10 +47,10 @@ public:
   typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
   typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
   typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-  typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+  typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
   // basic iterator type
-  typedef itk::ImageRegionIterator<DeformationFieldType> DeformationFieldIteratorType;
+  typedef itk::ImageRegionIterator<DisplacementFieldType> DisplacementFieldIteratorType;
   typedef itk::ImageRegionIterator<InternalImageType>    InternalImageIteratorType;
   typedef itk::ImageRegionIterator<CharImageType>        CharImageIteratorType;
 
@@ -63,14 +63,14 @@ public:
   typedef itk::CastImageFilter<InternalImageType, IntImageType>   Internal2IntCastFilterType;
   typedef itk::CastImageFilter<InternalImageType, ShortImageType> Internal2ShortCastFilterType;
 
-  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DeformationFieldType> InternalWarpFilterType;
+  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DisplacementFieldType> InternalWarpFilterType;
   typedef itk::ImageFileWriter<CharImageType>                                              CharImageWriterType;
   typedef itk::ImageFileWriter<IntImageType>                                               IntImageWriterType;
   typedef itk::ImageFileWriter<FloatImageType>                                             FloatImageWriterType;
   typedef itk::ImageFileWriter<ShortImageType>                                             ShortImageWriterType;
 
-  typedef itk::ImageFileReader<DeformationFieldType> DeformationFieldReaderType;
-  typedef itk::ImageFileWriter<DeformationFieldType> DeformationFieldWriterType;
+  typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
+  typedef itk::ImageFileWriter<DisplacementFieldType> DisplacementFieldWriterType;
 
   /** Method for creation through the object factory. */
   itkNewMacro(Self);

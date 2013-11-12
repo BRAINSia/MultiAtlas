@@ -1,28 +1,28 @@
-#ifndef __itkMABMISDeformationFieldFilter_hxx
-#define __itkMABMISDeformationFieldFilter_hxx
+#ifndef __itkMABMISDisplacementFieldFilter_hxx
+#define __itkMABMISDisplacementFieldFilter_hxx
 
-#include "itkMABMISDeformationFieldFilter.h"
+#include "itkMABMISDisplacementFieldFilter.h"
 
 namespace itk
 {
 namespace Statistics
 {
 template <class TInputImage, class TOutputImage>
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::MABMISDeformationFieldFilter()
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::MABMISDisplacementFieldFilter()
 {
   imgoperator = ImageOperationType::New();
 }
 
 template <class TInputImage, class TOutputImage>
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::~MABMISDeformationFieldFilter()
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::~MABMISDisplacementFieldFilter()
 {
 }
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
 ::PrintSelf(std::ostream& os, Indent indent) const
 {
   Superclass::PrintSelf( os, indent );
@@ -30,10 +30,10 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 int
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ReadDeformationField(std::string filename, DeformationFieldType::Pointer & deformationfield)
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ReadDisplacementField(std::string filename, DisplacementFieldType::Pointer & deformationfield)
 {
-  DeformationFieldReaderType::Pointer deformationFieldReader = DeformationFieldReaderType::New();
+  DisplacementFieldReaderType::Pointer deformationFieldReader = DisplacementFieldReaderType::New();
 
   deformationFieldReader->SetFileName( filename.c_str() );
   try
@@ -51,22 +51,22 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ComposeDeformationFieldsAndSave(std::string inputDeformationFieldFileName, std::string deformationFieldFileName,
-                                  std::string composedDeformationFieldFileName)
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ComposeDisplacementFieldsAndSave(std::string inputDisplacementFieldFileName, std::string deformationFieldFileName,
+                                  std::string composedDisplacementFieldFileName)
 {
-  DeformationFieldType::Pointer inputDeformationField = DeformationFieldType::New();
+  DisplacementFieldType::Pointer inputDisplacementField = DisplacementFieldType::New();
 
-  ReadDeformationField(inputDeformationFieldFileName, inputDeformationField);
+  ReadDisplacementField(inputDisplacementFieldFileName, inputDisplacementField);
 
-  DeformationFieldType::Pointer deformationField = DeformationFieldType::New();
-  ReadDeformationField(deformationFieldFileName, deformationField);
+  DisplacementFieldType::Pointer deformationField = DisplacementFieldType::New();
+  ReadDisplacementField(deformationFieldFileName, deformationField);
 
-  DeformationFieldType::Pointer composedDeformationField = DeformationFieldType::New();
+  DisplacementFieldType::Pointer composedDisplacementField = DisplacementFieldType::New();
 
-  ComposeDeformationFields(inputDeformationField, deformationField, composedDeformationField);
+  ComposeDisplacementFields(inputDisplacementField, deformationField, composedDisplacementField);
 
-  WriteDeformationField(composedDeformationFieldFileName, composedDeformationField);
+  WriteDisplacementField(composedDisplacementFieldFileName, composedDisplacementField);
 
   return;
 }
@@ -74,14 +74,14 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 // compose deformation fields
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ComposeDeformationFields(DeformationFieldType::Pointer input, DeformationFieldType::Pointer deformationField,
-                           DeformationFieldType::Pointer & composedDeformationField)
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ComposeDisplacementFields(DisplacementFieldType::Pointer input, DisplacementFieldType::Pointer deformationField,
+                           DisplacementFieldType::Pointer & composedDisplacementField)
 {
   WarpVectorFilterType::Pointer vectorWarper = WarpVectorFilterType::New();
 
   vectorWarper->SetInput( input );
-  vectorWarper->SetDeformationField( deformationField );
+  vectorWarper->SetDisplacementField( deformationField );
   vectorWarper->SetOutputOrigin(deformationField->GetOrigin() );
   vectorWarper->SetOutputSpacing(deformationField->GetSpacing() );
   vectorWarper->SetOutputDirection(deformationField->GetDirection() );
@@ -98,15 +98,15 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     std::cerr << err << std::endl;
     return;
     }
-  composedDeformationField = addImageSum->GetOutput();
-  composedDeformationField->DisconnectPipeline();
+  composedDisplacementField = addImageSum->GetOutput();
+  composedDisplacementField->DisconnectPipeline();
   return;
 }
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ApplyDeformationField(InternalImageType::Pointer movingImage, DeformationFieldType::Pointer deformationField,
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ApplyDisplacementField(InternalImageType::Pointer movingImage, DisplacementFieldType::Pointer deformationField,
                         InternalImageType::Pointer & deformedImage, bool isLinearInterpolator)
 {
   if( isLinearInterpolator )
@@ -119,7 +119,7 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     warper->SetOutputSpacing( movingImage->GetSpacing() );
     warper->SetOutputOrigin( movingImage->GetOrigin() );
     warper->SetOutputDirection( movingImage->GetDirection() );
-    warper->SetDeformationField( deformationField );
+    warper->SetDisplacementField( deformationField );
     try
       {
       warper->Update();
@@ -142,7 +142,7 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     warper->SetOutputSpacing( movingImage->GetSpacing() );
     warper->SetOutputOrigin( movingImage->GetOrigin() );
     warper->SetOutputDirection( movingImage->GetDirection() );
-    warper->SetDeformationField( deformationField );
+    warper->SetDisplacementField( deformationField );
     try
       {
       warper->Update();
@@ -160,29 +160,29 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 // apply deformation field on image and write deformed image
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ApplyDeformationFieldAndWriteWithFileNames(std::string movingImageName, std::string deformationFieldFileName,
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ApplyDisplacementFieldAndWriteWithFileNames(std::string movingImageName, std::string deformationFieldFileName,
                                              std::string deformedImageName, bool isLinearInterpolator)
 {
   typename ImageOperationType::Pointer imageoperator = ImageOperationType::New();
 
-  DeformationFieldType::Pointer deformationField = DeformationFieldType::New();
-  ReadDeformationField(deformationFieldFileName, deformationField);
+  DisplacementFieldType::Pointer deformationField = DisplacementFieldType::New();
+  ReadDisplacementField(deformationFieldFileName, deformationField);
 
   InternalImageType::Pointer movingImage = InternalImageType::New();
   imageoperator->ReadImage(movingImageName, movingImage);
 
   InternalImageType::Pointer deformedImage = InternalImageType::New();
 
-  ApplyDeformationField(movingImage, deformationField, deformedImage, isLinearInterpolator);
+  ApplyDisplacementField(movingImage, deformationField, deformedImage, isLinearInterpolator);
 
   imageoperator->WriteImage(deformedImageName, deformedImage);
 }
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::ApplyDeformationFieldAndWriteWithTypeWithFileNames(std::string  movingImageFileName,
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::ApplyDisplacementFieldAndWriteWithTypeWithFileNames(std::string  movingImageFileName,
                                                      std::string deformationFieldFileName,
                                                      std::string deformedImageFileName, bool isLinear)
 {
@@ -213,15 +213,15 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
   const int input_type = imageIO->GetComponentType(); // 9:float, 10:double
 
   //
-  DeformationFieldType::Pointer deformationField = DeformationFieldType::New();
-  ReadDeformationField(deformationFieldFileName, deformationField);
+  DisplacementFieldType::Pointer deformationField = DisplacementFieldType::New();
+  ReadDisplacementField(deformationFieldFileName, deformationField);
 
   InternalImageType::Pointer movingImage = InternalImageType::New();
   imgoperator->ReadImage(movingImageFileName, movingImage);
 
   InternalImageType::Pointer deformedImage = InternalImageType::New();
 
-  ApplyDeformationField(movingImage, deformationField, deformedImage, isLinear);
+  ApplyDisplacementField(movingImage, deformationField, deformedImage, isLinear);
 
   if( input_type == 1 ) // UCHAR
     {
@@ -250,10 +250,10 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::WriteDeformationField(std::string  filename, DeformationFieldType::Pointer deformationfield)
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::WriteDisplacementField(std::string  filename, DisplacementFieldType::Pointer deformationfield)
 {
-  DeformationFieldWriterType::Pointer deformationFieldWriter = DeformationFieldWriterType::New();
+  DisplacementFieldWriterType::Pointer deformationFieldWriter = DisplacementFieldWriterType::New();
 
   deformationFieldWriter->SetFileName( filename );
   deformationFieldWriter->SetInput(deformationfield);
@@ -272,8 +272,8 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::DownResampleDeformationField(std::string deformationFieldFileName, std::string resampledDeformationFieldFileName,
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::DownResampleDisplacementField(std::string deformationFieldFileName, std::string resampledDisplacementFieldFileName,
                                int sampleRate)
 {
   int rx, ry, rz;
@@ -282,13 +282,13 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
   ry = sampleRate;
   rz = sampleRate;
 
-  DeformationFieldType::Pointer originImage = 0;
+  DisplacementFieldType::Pointer originImage = 0;
 
-  ReadDeformationField(deformationFieldFileName, originImage);
+  ReadDisplacementField(deformationFieldFileName, originImage);
 
   int                            im_x, im_y, im_z;
   int                            im_xn, im_yn, im_zn;
-  DeformationFieldType::SizeType im_size = originImage->GetLargestPossibleRegion().GetSize();
+  DisplacementFieldType::SizeType im_size = originImage->GetLargestPossibleRegion().GetSize();
   im_x = im_size[0]; im_xn = (im_x - 1) / rx + 1;
   im_y = im_size[1]; im_yn = (im_y - 1) / ry + 1;
   im_z = im_size[2]; im_zn = (im_z - 1) / rz + 1;
@@ -343,12 +343,12 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     }
 
   // load original image
-  DeformationFieldIteratorType    itOrigin(originImage, originImage->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType    itOrigin(originImage, originImage->GetLargestPossibleRegion() );
   VectorPixelType                 vectorPixel;
   for( itOrigin.GoToBegin(); !itOrigin.IsAtEnd(); ++itOrigin )
     {
     vectorPixel = itOrigin.Get();
-    const DeformationFieldType::IndexType & idx = itOrigin.GetIndex();
+    const DisplacementFieldType::IndexType & idx = itOrigin.GetIndex();
 
     // pixel = itOrigin.Get();
     // idx = itOrigin.GetIndex();
@@ -371,12 +371,12 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     }
 
   // create the resampled image
-  DeformationFieldType::Pointer   sampledImage = DeformationFieldType::New();
-  DeformationFieldType::IndexType start;
+  DisplacementFieldType::Pointer   sampledImage = DisplacementFieldType::New();
+  DisplacementFieldType::IndexType start;
   start[0] = 0; start[1] = 0; start[2] = 0;
-  DeformationFieldType::SizeType size;
+  DisplacementFieldType::SizeType size;
   size[0] = im_xn; size[1] = im_yn; size[2] = im_zn;
-  DeformationFieldType::RegionType region;
+  DisplacementFieldType::RegionType region;
   region.SetSize(size);
   region.SetIndex(start);
 
@@ -388,17 +388,17 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
   sampledImage->Allocate();
 
-  DeformationFieldIteratorType itSampled(sampledImage, sampledImage->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType itSampled(sampledImage, sampledImage->GetLargestPossibleRegion() );
   for( itSampled.GoToBegin(); !itSampled.IsAtEnd(); ++itSampled )
     {
-    const DeformationFieldType::IndexType &idx = itSampled.GetIndex();
+    const DisplacementFieldType::IndexType &idx = itSampled.GetIndex();
     vectorPixel.SetElement(0, sampledImageRawX[idx[2]][idx[1]][idx[0]]);
     vectorPixel.SetElement(1, sampledImageRawY[idx[2]][idx[1]][idx[0]]);
     vectorPixel.SetElement(2, sampledImageRawZ[idx[2]][idx[1]][idx[0]]);
     itSampled.Set(vectorPixel);
     }
 
-  WriteDeformationField(resampledDeformationFieldFileName, sampledImage);
+  WriteDisplacementField(resampledDisplacementFieldFileName, sampledImage);
   // delete newed variables
   for( int k = 0; k < im_z; ++k )
     {
@@ -436,8 +436,8 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::UpResampleDeformationField(std::string deformationFieldFileName, std::string  resampledDeformationFieldFileName,
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::UpResampleDisplacementField(std::string deformationFieldFileName, std::string  resampledDisplacementFieldFileName,
                              int sampleRate)
 {
   // upsample
@@ -447,13 +447,13 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
   ry = sampleRate;
   rz = sampleRate;
 
-  DeformationFieldType::Pointer originImage = 0;
+  DisplacementFieldType::Pointer originImage = 0;
 
-  ReadDeformationField(deformationFieldFileName, originImage);
+  ReadDisplacementField(deformationFieldFileName, originImage);
 
   int                            im_x, im_y, im_z;
   int                            im_xn, im_yn, im_zn;
-  DeformationFieldType::SizeType im_size = originImage->GetLargestPossibleRegion().GetSize();
+  DisplacementFieldType::SizeType im_size = originImage->GetLargestPossibleRegion().GetSize();
   im_x = im_size[0];
   im_y = im_size[1];
   im_z = im_size[2];
@@ -507,12 +507,12 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     }
 
   // load original image
-  DeformationFieldIteratorType    itOrigin(originImage, originImage->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType    itOrigin(originImage, originImage->GetLargestPossibleRegion() );
   VectorPixelType                 vectorPixel;
   for( itOrigin.GoToBegin(); !itOrigin.IsAtEnd(); ++itOrigin )
     {
     vectorPixel = itOrigin.Get();
-    const DeformationFieldType::IndexType & idx = itOrigin.GetIndex();
+    const DisplacementFieldType::IndexType & idx = itOrigin.GetIndex();
 
     originImageRawX[idx[2]][idx[1]][idx[0]] = vectorPixel.GetElement(0);
     originImageRawY[idx[2]][idx[1]][idx[0]] = vectorPixel.GetElement(1);
@@ -533,12 +533,12 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
     }
 
   // create the resampled image
-  DeformationFieldType::Pointer   sampledImage = DeformationFieldType::New();
-  DeformationFieldType::IndexType start;
+  DisplacementFieldType::Pointer   sampledImage = DisplacementFieldType::New();
+  DisplacementFieldType::IndexType start;
   start[0] = 0; start[1] = 0; start[2] = 0;
-  DeformationFieldType::SizeType size;
+  DisplacementFieldType::SizeType size;
   size[0] = im_xn; size[1] = im_yn; size[2] = im_zn;
-  DeformationFieldType::RegionType region;
+  DisplacementFieldType::RegionType region;
   region.SetSize(size);
   region.SetIndex(start);
 
@@ -550,17 +550,17 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
   sampledImage->Allocate();
 
-  DeformationFieldIteratorType itSampled(sampledImage, sampledImage->GetLargestPossibleRegion() );
+  DisplacementFieldIteratorType itSampled(sampledImage, sampledImage->GetLargestPossibleRegion() );
   for( itSampled.GoToBegin(); !itSampled.IsAtEnd(); ++itSampled )
     {
-    const DeformationFieldType::IndexType &idx = itSampled.GetIndex();
+    const DisplacementFieldType::IndexType &idx = itSampled.GetIndex();
     vectorPixel.SetElement(0, sampledImageRawX[idx[2]][idx[1]][idx[0]]);
     vectorPixel.SetElement(1, sampledImageRawY[idx[2]][idx[1]][idx[0]]);
     vectorPixel.SetElement(2, sampledImageRawZ[idx[2]][idx[1]][idx[0]]);
     itSampled.Set(vectorPixel);
     }
 
-  WriteDeformationField(resampledDeformationFieldFileName, sampledImage);
+  WriteDisplacementField(resampledDisplacementFieldFileName, sampledImage);
   // delete newed variables
   for( int k = 0; k < im_z; ++k )
     {
@@ -598,9 +598,9 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
 template <class TInputImage, class TOutputImage>
 void
-MABMISDeformationFieldFilter<TInputImage, TOutputImage>
-::InverseDeformationField3D(DeformationFieldType::Pointer deformationField,
-                            DeformationFieldType::Pointer & deformationFieldInverse)
+MABMISDisplacementFieldFilter<TInputImage, TOutputImage>
+::InverseDisplacementField3D(DisplacementFieldType::Pointer deformationField,
+                            DisplacementFieldType::Pointer & deformationFieldInverse)
 {
   int          SHIFT = 2;
   float        OUTSIDE = 0; // 100000.0;//0;
@@ -614,8 +614,8 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
   mdl_subvoxelx = 0.0; mdl_subvoxely = 0.0; mdl_subvoxelz = 0.0; disp_subvoxelx = 0.0; disp_subvoxely = 0.0;
   disp_subvoxelz = 0.0;
-  DeformationFieldIteratorType dfNewIt( deformationFieldInverse, deformationFieldInverse->GetRequestedRegion() );
-  DeformationFieldIteratorType dfIt( deformationField, deformationField->GetRequestedRegion() );
+  DisplacementFieldIteratorType dfNewIt( deformationFieldInverse, deformationFieldInverse->GetRequestedRegion() );
+  DisplacementFieldIteratorType dfIt( deformationField, deformationField->GetRequestedRegion() );
 
   // initialize three 3D float matrix to store deformation field
   // unsigned int image_size = deformationField->GetRequestedRegion().GetSize()[0];
@@ -644,7 +644,7 @@ MABMISDeformationFieldFilter<TInputImage, TOutputImage>
 
   // load deformationFieldBA into 3 3D matrix dfx and dfy and dfz
   VectorPixelType                 vectorPixel;
-  DeformationFieldType::IndexType idx;
+  DisplacementFieldType::IndexType idx;
   // for (i = 0, j = 0, k = 0, dfIt.GoToBegin(); !dfIt.IsAtEnd(); ++dfIt)
   for( dfIt.GoToBegin(); !dfIt.IsAtEnd(); ++dfIt )
     {

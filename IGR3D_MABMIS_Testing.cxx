@@ -42,10 +42,8 @@
 
 #include "itkHistogramMatchingImageFilter.h"
 #include "itkAddImageFilter.h"
-#include "itkDivideByConstantImageFilter.h"
-#include "itkMultiplyByConstantImageFilter.h"
 #include "itkWarpVectorImageFilter.h"
-#include "itkInverseDeformationFieldImageFilter.h"
+#include "itkInverseDisplacementFieldImageFilter.h"
 
 // for affine transformation
 #include "itkTransform.h"
@@ -64,7 +62,7 @@
 // To include all related header files
 #include "IGR3D_MABMIS_TestingCLP.h"
 #include "itkMABMISImageOperationFilter.h"
-#include "itkMABMISDeformationFieldFilter.h"
+#include "itkMABMISDisplacementFieldFilter.h"
 #include "itkMABMISSimulateData.h"
 #include "itkMABMISImageRegistrationFilter.h"
 #include "itkMABMISTreeOperation.h"
@@ -120,7 +118,6 @@ GetRootName(const std::string & filename)
 }
 
 typedef double CoordinateRepType;
-const   unsigned int SpaceDimension = ImageDimension;
 
 // basic data type
 typedef unsigned char                                  CharPixelType;  // for image IO usage
@@ -136,10 +133,10 @@ typedef itk::Image<IntPixelType, ImageDimension>      IntImageType;
 typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
 typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
 typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
 // basic iterator type
-typedef itk::ImageRegionIterator<DeformationFieldType> DeformationFieldIteratorType;
+typedef itk::ImageRegionIterator<DisplacementFieldType> DisplacementFieldIteratorType;
 typedef itk::ImageRegionIterator<InternalImageType>    InternalImageIteratorType;
 typedef itk::ImageRegionIterator<CharImageType>        CharImageIteratorType;
 
@@ -148,14 +145,14 @@ typedef itk::ImageFileReader<CharImageType>     CharImageReaderType;
 typedef itk::ImageFileReader<InternalImageType> InternalImageReaderType;
 typedef itk::ImageFileWriter<InternalImageType> InternalImageWriterType;
 
-typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DeformationFieldType> InternalWarpFilterType;
+typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DisplacementFieldType> InternalWarpFilterType;
 typedef itk::ImageFileWriter<CharImageType>                                              CharImageWriterType;
 typedef itk::ImageFileWriter<IntImageType>                                               IntImageWriterType;
 typedef itk::ImageFileWriter<FloatImageType>                                             FloatImageWriterType;
 typedef itk::ImageFileWriter<ShortImageType>                                             ShortImageWriterType;
 
-typedef itk::ImageFileReader<DeformationFieldType> DeformationFieldReaderType;
-typedef itk::ImageFileWriter<DeformationFieldType> DeformationFieldWriterType;
+typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
+typedef itk::ImageFileWriter<DisplacementFieldType> DisplacementFieldWriterType;
 
 //////////////////////////////////////////////////////////////////////////////
 // image filter type
@@ -164,12 +161,12 @@ typedef itk::HistogramMatchingImageFilter<InternalImageType, InternalImageType> 
 
 ////////////////////////////////////////////////////////////////////////////
 // operation on deformation fields
-typedef itk::WarpVectorImageFilter<DeformationFieldType, DeformationFieldType,
-                                   DeformationFieldType>                                      WarpVectorFilterType;
-typedef itk::InverseDeformationFieldImageFilter<DeformationFieldType,
-                                                DeformationFieldType>
-  InverseDeformationFieldImageFilterType;
-typedef itk::AddImageFilter<DeformationFieldType, DeformationFieldType, DeformationFieldType> AddImageFilterType;
+typedef itk::WarpVectorImageFilter<DisplacementFieldType, DisplacementFieldType,
+                                   DisplacementFieldType>                                      WarpVectorFilterType;
+typedef itk::InverseDisplacementFieldImageFilter<DisplacementFieldType,
+                                                DisplacementFieldType>
+  InverseDisplacementFieldImageFilterType;
+typedef itk::AddImageFilter<DisplacementFieldType, DisplacementFieldType, DisplacementFieldType> AddImageFilterType;
 
 // global bool variables to adjust the  procedure
 
@@ -193,9 +190,9 @@ DataSimulatorType::Pointer datasimulator;
 
 typedef itk::Statistics::MABMISImageOperationFilter<CharImageType, CharImageType> ImageOperationFilterType;
 ImageOperationFilterType::Pointer imgoperator;
-typedef itk::Statistics::MABMISDeformationFieldFilter<InternalImageType,
-                                                      InternalImageType> DeformationFieldOperationFilterType;
-DeformationFieldOperationFilterType::Pointer dfoperator;
+typedef itk::Statistics::MABMISDisplacementFieldFilter<InternalImageType,
+                                                      InternalImageType> DisplacementFieldOperationFilterType;
+DisplacementFieldOperationFilterType::Pointer dfoperator;
 typedef itk::Statistics::MABMISImageRegistrationFilter<CharImageType, CharImageType> ImageRegistrationFilterType;
 ImageRegistrationFilterType::Pointer regoperator;
 typedef itk::Statistics::MABMISTreeOperation<InternalImageType, InternalImageType> TreeOperationType;
@@ -207,8 +204,8 @@ BasicOperationFilterType::Pointer basicoperator;
 //
 
 typedef itk::Vector<ShortPixelType, ImageDimension>      ShortVectorPixelType;
-typedef itk::Image<ShortVectorPixelType, ImageDimension> ShortDeformationFieldType;
-typedef itk::ImageFileWriter<ShortDeformationFieldType>  ShortDeformationFieldWriterType;
+typedef itk::Image<ShortVectorPixelType, ImageDimension> ShortDisplacementFieldType;
+typedef itk::ImageFileWriter<ShortDisplacementFieldType>  ShortDisplacementFieldWriterType;
 
 void ReadImgInfo(std::vector<std::string> imgfilenames);
 
@@ -224,7 +221,7 @@ void TreeBasedRegistrationFastOniTree(vnl_vector<int> itree,          // the inc
                                       double sigma);
 
 void LabelFusion(std::string curSampleImgName, std::string outSampleSegName, std::vector<std::string>  allWarpedAtlasImgNames,
-                 std::vector<std::string> allDeformationFieldNames, std::vector<std::string> allAtlasSegNames, int numOfAtlases);
+                 std::vector<std::string> allDisplacementFieldNames, std::vector<std::string> allAtlasSegNames, int numOfAtlases);
 
 void GaussianWeightedLabelFusion(InternalImageType::Pointer curSampleImgPtr, InternalImageType::Pointer outSampleSegPtr,
                                  InternalImageType::Pointer* warpedImgPtrs, InternalImageType::Pointer* warpedSegPtrs,
@@ -623,7 +620,7 @@ int main( int argc, char *argv[] )
   // Will look into getting rid of these global variables later ---Xiaofeng
   datasimulator = DataSimulatorType::New();
   imgoperator = ImageOperationFilterType::New();
-  dfoperator = DeformationFieldOperationFilterType::New();
+  dfoperator = DisplacementFieldOperationFilterType::New();
   regoperator = ImageRegistrationFilterType::New();
   treeoperator = TreeOperationType::New();
   basicoperator = BasicOperationFilterType::New();
@@ -636,7 +633,7 @@ int main( int argc, char *argv[] )
 }
 
 void LabelFusion(std::string curSampleImgName, std::string outSampleSegName, std::vector<std::string> allWarpedAtlasImgNames,
-                 std::vector<std::string> allDeformationFieldNames, std::vector<std::string> allAtlasSegNames, int numOfAtlases)
+                 std::vector<std::string> allDisplacementFieldNames, std::vector<std::string> allAtlasSegNames, int numOfAtlases)
 {
   // create pointers for each images including: cur_image, our_seg,
   // warpedImg(after histogram matching), warpedSeg (after warping)
@@ -664,13 +661,13 @@ void LabelFusion(std::string curSampleImgName, std::string outSampleSegName, std
     HistogramMatching(curWarpedAtlasPtr, curSampleImgPtr, warpedImgPtrs[i]);
 
     // load each deformation field
-    DeformationFieldType::Pointer deformFieldPtr = 0;
-    dfoperator->ReadDeformationField(allDeformationFieldNames[i], deformFieldPtr);
+    DisplacementFieldType::Pointer deformFieldPtr = 0;
+    dfoperator->ReadDisplacementField(allDisplacementFieldNames[i], deformFieldPtr);
 
     // warp each atlas label image to the current sample space
     InternalImageType::Pointer curAtlasSegPtr = 0;
     imgoperator->ReadImage(allAtlasSegNames[i], curAtlasSegPtr);
-    dfoperator->ApplyDeformationField(curAtlasSegPtr, deformFieldPtr, warpedSegPtrs[i], false);
+    dfoperator->ApplyDisplacementField(curAtlasSegPtr, deformFieldPtr, warpedSegPtrs[i], false);
     }
 
   // weighted label fusion
@@ -713,9 +710,6 @@ void GaussianWeightedLabelFusion(InternalImageType::Pointer curSampleImgPtr, Int
                                                                                                         //
                                                                                                         // GetRequestedRegion());
 
-  InternalImageType::SizeType sampleImSize = outSampleSegPtr->GetBufferedRegion().GetSize();
-
-  // InternalImageIteratorType* warpedImgIts = new InternalImageIteratorType[numOfAtlases];
   InternalImageIteratorType* warpedSegIts = new InternalImageIteratorType[numOfAtlases];
 
   typedef itk::ConstNeighborhoodIterator<InternalImageType> InternalImageNeighborhoodIteratorType;
@@ -781,8 +775,6 @@ void GaussianWeightedLabelFusion(InternalImageType::Pointer curSampleImgPtr, Int
       }
     }
 
-  InternalImageIteratorType::IndexType idx;
-  InternalImageIteratorType::IndexType idx1;
 
   int     temp1, temp2;
   double  kernel_sigma = 1; // std of Gaussian approximation, set to the median of all distances
@@ -804,9 +796,6 @@ void GaussianWeightedLabelFusion(InternalImageType::Pointer curSampleImgPtr, Int
        !sampleImgNeighborIt.IsAtEnd();
        ++sampleImgNeighborIt, ++sampleSegIt )
     {
-//		idx = sampleImgNeighborIt.GetIndex();
-//		if (idx[0] == 30 && idx[1]==20 && idx[2] ==8)
-//			idx[0] = idx[0];
     double msec = 0.0;
     for( int i = 0; i < numOfAtlases; ++i )
       {
@@ -867,101 +856,6 @@ void GaussianWeightedLabelFusion(InternalImageType::Pointer curSampleImgPtr, Int
       ++warpedSegIts[i];
       }
     }
-  /*
-  for (int vz = 0; vz < sampleImSize[2]; vz++)
-  {
-    //if (isDebug)
-    //	std::cout << vz << ", ";
-    for (int vy = 0; vy < sampleImSize[1]; vy++)
-    {
-      for (int vx = 0; vx < sampleImSize[0]; vx++)
-      {
-        // process each voxel
-        idx.SetElement(0,vx);
-        idx.SetElement(1,vy);
-        idx.SetElement(2,vz);
-
-        // get labels from all atlases on this current location
-
-        for (int i = 0; i < numOfAtlases; ++i)
-        {
-
-          warpedSegIts[i].SetIndex(idx);
-          label_pool[i] = warpedSegIts[i].Get();
-        }
-
-        // get the local patch differences
-
-        for (int i = 0; i < numOfAtlases; ++i) mse[i] = 0.0;
-        for (int i = 0; i < numOfAtlases; ++i)
-        {
-          double msec = 0.0;
-          // compare with all other images at the local patch of current voxel
-          // (nx,ny,nz) is the incremental position on (vx,vy,vz)
-          for(int nz = 0-localPatchSize; nz <= localPatchSize; nz++)
-          {
-            for(int ny = 0-localPatchSize; ny <= localPatchSize; ny++)
-            {
-              for(int nx = 0-localPatchSize; nx <= localPatchSize; nx++)
-              {
-                if ((vx+nx>=0)&&(vx+nx<sampleImSize[0])&&(vy+ny>=0)&&(vy+ny<sampleImSize[1])&&(vz+nz>=0)&&(vz+nz<sampleImSize[2]))
-                {
-                  // within the valid range, and then get voxel intensity
-                  //
-                  idx1.SetElement(0,vx+nx);
-                  idx1.SetElement(1,vy+ny);
-                  idx1.SetElement(2,vz+nz);
-
-                  sampleImgIt.SetIndex(idx1);
-                  warpedImgIts[i].SetIndex(idx1);
-
-                  temp1 = sampleImgIt.Get();
-                  temp2 = warpedImgIts[i].Get();
-
-                  // add together differences, squared sum
-                  msec += (temp1-temp2)*(temp1-temp2);
-                }
-              }
-            }
-          }
-          mse[i] = sqrt(msec);
-        }// end of for nz
-
-        // sort all difference
-
-        for (int i = 0; i < numOfAtlases; ++i)
-        {
-          index[i] = i;
-          sort1[i] = mse[i];
-        }
-        basicoperator->bubbleSort(sort1, index, numOfAtlases);
-        kernel_sigma = sort1[(int)((numOfAtlases-1)/2)]+0.0001;
-
-        // weight each label
-
-        for (int i = 0; i < maxLabel+1; ++i) weight_sum[i] = 0.0;
-        for (int i = 0; i < numOfAtlases; ++i)
-        {
-          // add-up all weights
-          weight_sum[label_pool[i]]+= exp(0-(mse[i]*mse[i])/(2*kernel_sigma*kernel_sigma));
-        }
-
-        // weighted label fusion
-        for (int i = 0; i < maxLabel+1; ++i)	label_index[i] = i;
-
-        basicoperator->bubbleSort(weight_sum, label_index, maxLabel+1);
-        int label_final;
-        label_final = label_index[maxLabel];
-
-        // assign label to the segmentations
-        sampleSegIt.SetIndex(idx);
-        sampleSegIt.Set(label_final);
-
-      }
-    }
-  }// end of for vz
-
-*/
   delete[] label_pool;
   delete[] mse;
   delete[] weight_sum;
@@ -1345,20 +1239,20 @@ void RegistrationOntoTreeRoot(vnl_vector<int> itree,          // the incremental
       }
 
     // reverse deformation field
-    DeformationFieldType::Pointer deformationField = 0;
-    dfoperator->ReadDeformationField(deformationFileName, deformationField);
+    DisplacementFieldType::Pointer deformationField = 0;
+    dfoperator->ReadDisplacementField(deformationFileName, deformationField);
 
-    DeformationFieldType::Pointer inversedDeformationField = DeformationFieldType::New();
-    inversedDeformationField->SetRegions(deformationField->GetLargestPossibleRegion() );
-    inversedDeformationField->SetSpacing(deformationField->GetSpacing() );
-    inversedDeformationField->SetDirection(deformationField->GetDirection() );
-    inversedDeformationField->SetOrigin(deformationField->GetOrigin() );
-    inversedDeformationField->Allocate();
+    DisplacementFieldType::Pointer inversedDisplacementField = DisplacementFieldType::New();
+    inversedDisplacementField->SetRegions(deformationField->GetLargestPossibleRegion() );
+    inversedDisplacementField->SetSpacing(deformationField->GetSpacing() );
+    inversedDisplacementField->SetDirection(deformationField->GetDirection() );
+    inversedDisplacementField->SetOrigin(deformationField->GetOrigin() );
+    inversedDisplacementField->Allocate();
 
-    dfoperator->InverseDeformationField3D(deformationField, inversedDeformationField);
+    dfoperator->InverseDisplacementField3D(deformationField, inversedDisplacementField);
     // output reversed deformation field
 
-    dfoperator->WriteDeformationField(invDeformationFileName, inversedDeformationField);
+    dfoperator->WriteDisplacementField(invDeformationFileName, inversedDisplacementField);
     // //update
     regoperator->DiffeoDemonsRegistrationWithInitialWithParameters(
       fixedImageFileName, rootImageFileName,
@@ -1366,11 +1260,11 @@ void RegistrationOntoTreeRoot(vnl_vector<int> itree,          // the incremental
       deformedImageFileName, invDeformationFileName,
       sigma, doHistMatch, iterations);
         
-    // CompressDeformationField2Short(inversedDeformationFieldFileName);
+    // CompressDisplacementField2Short(inversedDisplacementFieldFileName);
     // apply deformation field on seg file
     if( isEvaluate )
       {
-      dfoperator->ApplyDeformationFieldAndWriteWithFileNames(
+      dfoperator->ApplyDisplacementFieldAndWriteWithFileNames(
         rootSegmentFileName,
         invDeformationFileName,
         deformedSegmentFileName, false);
@@ -1492,24 +1386,24 @@ void PairwiseRegistrationOnTreeViaRoot(int root,
         }
 
       // compose
-      // std::string inputDeformationFieldFileName = sub_ids[root] + "_" + sub_ids[all_index] + "_deform_000.nii.gz";
-      // std::string secondDeformationFieldFileName = sub_ids[sample_index] + "_" + sub_ids[root] + "_deform_000.nii.gz";
-      std::string inputDeformationFieldFileName;
+      // std::string inputDisplacementFieldFileName = sub_ids[root] + "_" + sub_ids[all_index] + "_deform_000.nii.gz";
+      // std::string secondDisplacementFieldFileName = sub_ids[sample_index] + "_" + sub_ids[root] + "_deform_000.nii.gz";
+      std::string inputDisplacementFieldFileName;
       if( all_index < atlas_image_size )
         {
-        inputDeformationFieldFileName = atlasTree->m_AtlasDirectory + movingImageTag + "_to_" + root_str
+        inputDisplacementFieldFileName = atlasTree->m_AtlasDirectory + movingImageTag + "_to_" + root_str
           + "_deform_000.nii.gz";
         }
       else
         {
-        inputDeformationFieldFileName  = imageData->m_DataDirectory + movingImageTag + "_to_" + root_str
+        inputDisplacementFieldFileName  = imageData->m_DataDirectory + movingImageTag + "_to_" + root_str
           + "_deform_000.nii.gz";
         }
-      std::string secondDeformationFieldFileName = imageData->m_DataDirectory + root_str + "_to_" + fixedImageTag
+      std::string secondDisplacementFieldFileName = imageData->m_DataDirectory + root_str + "_to_" + fixedImageTag
         + "_deform_000.nii.gz";
       // output composed deformation field
-      dfoperator->ComposeDeformationFieldsAndSave(inputDeformationFieldFileName,
-                                                  secondDeformationFieldFileName,
+      dfoperator->ComposeDisplacementFieldsAndSave(inputDisplacementFieldFileName,
+                                                  secondDisplacementFieldFileName,
                                                   dfFileName);
 
       // update: refine the deformation
@@ -1523,7 +1417,7 @@ void PairwiseRegistrationOnTreeViaRoot(int root,
 
       if( isEvaluate )
         {
-        dfoperator->ApplyDeformationFieldAndWriteWithFileNames(
+        dfoperator->ApplyDisplacementFieldAndWriteWithFileNames(
           movingSegmentFileName,
           dfFileName,
           deformedSegmentFileName, false);
@@ -1535,7 +1429,7 @@ void PairwiseRegistrationOnTreeViaRoot(int root,
 }
 
 // void MultiAtlasBasedSegmentation(int filenumber, int atlas_size, std::vector<std::string> sub_ids)
-int MultiAtlasBasedSegmentation(int root,
+int MultiAtlasBasedSegmentation(int,
                                 itk::MABMISImageData* imageData,
                                 itk::MABMISAtlas* atlasTree)
 {
@@ -1590,7 +1484,7 @@ int MultiAtlasBasedSegmentation(int root,
 
       // prepare all current atlases names
       std::vector<std::string> allWarpedAtlasImgNames;
-      std::vector<std::string> allDeformationFieldNames;
+      std::vector<std::string> allDisplacementFieldNames;
       std::vector<std::string> allAtlasSegNames;
 
       int atlas_index = 0;
@@ -1621,7 +1515,7 @@ int MultiAtlasBasedSegmentation(int root,
 
         // assign names
         // std::string allWarpedAtlasImgName = sub_ids[sample_index] + "_" + sub_ids[i] + "_cbq_000.nii.gz";
-        // std::string allDeformationFieldName = sub_ids[sample_index] + "_" + sub_ids[i] + "_deform_000.nii.gz";
+        // std::string allDisplacementFieldName = sub_ids[sample_index] + "_" + sub_ids[i] + "_deform_000.nii.gz";
         std::string warpedImageFileName = movingImageTag + "_to_" + testImageTag + "_cbq_000.nii.gz";
         std::string dfFileName = movingImageTag + "_to_" + testImageTag + "_deform_000.nii.gz";
 
@@ -1643,7 +1537,7 @@ int MultiAtlasBasedSegmentation(int root,
           }
 
         allWarpedAtlasImgNames.push_back(warpedImageFileName);
-        allDeformationFieldNames.push_back(dfFileName);
+        allDisplacementFieldNames.push_back(dfFileName);
         allAtlasSegNames.push_back(atlasSegName);
 
         // go to next atlas
@@ -1654,7 +1548,7 @@ int MultiAtlasBasedSegmentation(int root,
       LabelFusion(testImageFileName,  // the input image to be segmented
                   testSementFileName, // the output segmented image
                   allWarpedAtlasImgNames,
-                  allDeformationFieldNames,
+                  allDisplacementFieldNames,
                   allAtlasSegNames,
                   numOtherAtlases);
       }

@@ -12,7 +12,7 @@
 
 #include "itkImage.h"
 
-#include "itkMABMISDeformationFieldFilter.h"
+#include "itkMABMISDisplacementFieldFilter.h"
 #include "itkMABMISImageOperationFilter.h"
 
 #define ImageDimension 3
@@ -51,10 +51,10 @@ public:
   typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
   typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
   typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-  typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+  typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
 // basic iterator type
-  typedef itk::ImageRegionIterator<DeformationFieldType> DeformationFieldIteratorType;
+  typedef itk::ImageRegionIterator<DisplacementFieldType> DisplacementFieldIteratorType;
   typedef itk::ImageRegionIterator<InternalImageType>    InternalImageIteratorType;
   typedef itk::ImageRegionIterator<CharImageType>        CharImageIteratorType;
 
@@ -67,14 +67,14 @@ public:
   typedef itk::CastImageFilter<InternalImageType, IntImageType>   Internal2IntCastFilterType;
   typedef itk::CastImageFilter<InternalImageType, ShortImageType> Internal2ShortCastFilterType;
 
-  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DeformationFieldType> InternalWarpFilterType;
+  typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DisplacementFieldType> InternalWarpFilterType;
   typedef itk::ImageFileWriter<CharImageType>                                              CharImageWriterType;
   typedef itk::ImageFileWriter<IntImageType>                                               IntImageWriterType;
   typedef itk::ImageFileWriter<FloatImageType>                                             FloatImageWriterType;
   typedef itk::ImageFileWriter<ShortImageType>                                             ShortImageWriterType;
 
-  typedef itk::ImageFileReader<DeformationFieldType> DeformationFieldReaderType;
-  typedef itk::ImageFileWriter<DeformationFieldType> DeformationFieldWriterType;
+  typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
+  typedef itk::ImageFileWriter<DisplacementFieldType> DisplacementFieldWriterType;
 
   typedef itk::HistogramMatchingImageFilter<InternalImageType, InternalImageType> InternalHistMatchFilterType;
 
@@ -84,10 +84,10 @@ public:
   /** Run-time type information (and related methods). */
   itkTypeMacro(MABMISImageRegistrationFilter, ImageToImageFilter);
 
-  typedef itk::Statistics::MABMISDeformationFieldFilter<ImageType, ImageType> DeformationFieldOperationType;
+  typedef itk::Statistics::MABMISDisplacementFieldFilter<ImageType, ImageType> DisplacementFieldOperationType;
   typedef itk::Statistics::MABMISImageOperationFilter<ImageType, ImageType>   ImageOperationType;
 
-  typename DeformationFieldOperationType::Pointer dfoperator;
+  typename DisplacementFieldOperationType::Pointer dfoperator;
   typename ImageOperationType::Pointer imgoperator;
 
   void DoIt();
@@ -97,7 +97,7 @@ public:
                                              double sigmaDef, bool doHistMatch, std::vector<int> iterInResolutions);
 
   int DiffeoDemonsRegistrationWithInitialWithParameters(std::string  fixedImageFileName, std::string movingImageFileName,
-                                                        std::string initDeformationFieldFileName,
+                                                        std::string initDisplacementFieldFileName,
                                                         std::string deformedImageFileName, std::string deformationFieldFileName,
                                                         double sigmaDef, bool doHistMatch,
                                                         std::vector<int> iterInResolutions);

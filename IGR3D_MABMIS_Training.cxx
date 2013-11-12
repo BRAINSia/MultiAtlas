@@ -42,10 +42,8 @@
 
 #include "itkHistogramMatchingImageFilter.h"
 #include "itkAddImageFilter.h"
-#include "itkDivideByConstantImageFilter.h"
-#include "itkMultiplyByConstantImageFilter.h"
 #include "itkWarpVectorImageFilter.h"
-#include "itkInverseDeformationFieldImageFilter.h"
+#include "itkInverseDisplacementFieldImageFilter.h"
 
 // for affine transformation
 #include "itkTransform.h"
@@ -64,7 +62,7 @@
 // To include all related header files
 #include "IGR3D_MABMIS_TrainingCLP.h"
 #include "itkMABMISImageOperationFilter.h"
-#include "itkMABMISDeformationFieldFilter.h"
+#include "itkMABMISDisplacementFieldFilter.h"
 #include "itkMABMISSimulateData.h"
 #include "itkMABMISImageRegistrationFilter.h"
 #include "itkMABMISTreeOperation.h"
@@ -84,7 +82,6 @@ static std::string ReplacePathSepForOS( const std::string & input )
 }
 
 typedef double CoordinateRepType;
-const   unsigned int SpaceDimension = ImageDimension;
 
 // basic data type
 typedef unsigned char                                  CharPixelType;  // for image IO usage
@@ -100,10 +97,10 @@ typedef itk::Image<IntPixelType, ImageDimension>      IntImageType;
 typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
 typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
 typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
 // basic iterator type
-typedef itk::ImageRegionIterator<DeformationFieldType> DeformationFieldIteratorType;
+typedef itk::ImageRegionIterator<DisplacementFieldType> DisplacementFieldIteratorType;
 typedef itk::ImageRegionIterator<InternalImageType>    InternalImageIteratorType;
 typedef itk::ImageRegionIterator<CharImageType>        CharImageIteratorType;
 
@@ -112,14 +109,14 @@ typedef itk::ImageFileReader<CharImageType>     CharImageReaderType;
 typedef itk::ImageFileReader<InternalImageType> InternalImageReaderType;
 typedef itk::ImageFileWriter<InternalImageType> InternalImageWriterType;
 
-typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DeformationFieldType> InternalWarpFilterType;
+typedef itk::WarpImageFilter<InternalImageType, InternalImageType, DisplacementFieldType> InternalWarpFilterType;
 typedef itk::ImageFileWriter<CharImageType>                                              CharImageWriterType;
 typedef itk::ImageFileWriter<IntImageType>                                               IntImageWriterType;
 typedef itk::ImageFileWriter<FloatImageType>                                             FloatImageWriterType;
 typedef itk::ImageFileWriter<ShortImageType>                                             ShortImageWriterType;
 
-typedef itk::ImageFileReader<DeformationFieldType> DeformationFieldReaderType;
-typedef itk::ImageFileWriter<DeformationFieldType> DeformationFieldWriterType;
+typedef itk::ImageFileReader<DisplacementFieldType> DisplacementFieldReaderType;
+typedef itk::ImageFileWriter<DisplacementFieldType> DisplacementFieldWriterType;
 
 //////////////////////////////////////////////////////////////////////////////
 // image filter type
@@ -128,12 +125,12 @@ typedef itk::HistogramMatchingImageFilter<InternalImageType, InternalImageType> 
 
 ////////////////////////////////////////////////////////////////////////////
 // operation on deformation fields
-typedef itk::WarpVectorImageFilter<DeformationFieldType, DeformationFieldType,
-                                   DeformationFieldType>                                      WarpVectorFilterType;
-typedef itk::InverseDeformationFieldImageFilter<DeformationFieldType,
-                                                DeformationFieldType>
-  InverseDeformationFieldImageFilterType;
-typedef itk::AddImageFilter<DeformationFieldType, DeformationFieldType, DeformationFieldType> AddImageFilterType;
+typedef itk::WarpVectorImageFilter<DisplacementFieldType, DisplacementFieldType,
+                                   DisplacementFieldType>                                      WarpVectorFilterType;
+typedef itk::InverseDisplacementFieldImageFilter<DisplacementFieldType,
+                                                DisplacementFieldType>
+  InverseDisplacementFieldImageFilterType;
+typedef itk::AddImageFilter<DisplacementFieldType, DisplacementFieldType, DisplacementFieldType> AddImageFilterType;
 
 // global bool variables to adjust the  procedure
 
@@ -162,9 +159,9 @@ DataSimulatorType::Pointer datasimulator;
 
 typedef itk::Statistics::MABMISImageOperationFilter<CharImageType, CharImageType> ImageOperationFilterType;
 ImageOperationFilterType::Pointer imgoperator;
-typedef itk::Statistics::MABMISDeformationFieldFilter<InternalImageType,
-                                                      InternalImageType> DeformationFieldOperationFilterType;
-DeformationFieldOperationFilterType::Pointer dfoperator;
+typedef itk::Statistics::MABMISDisplacementFieldFilter<InternalImageType,
+                                                      InternalImageType> DisplacementFieldOperationFilterType;
+DisplacementFieldOperationFilterType::Pointer dfoperator;
 typedef itk::Statistics::MABMISImageRegistrationFilter<CharImageType, CharImageType> ImageRegistrationFilterType;
 ImageRegistrationFilterType::Pointer regoperator;
 typedef itk::Statistics::MABMISTreeOperation<InternalImageType, InternalImageType> TreeOperationType;
@@ -174,13 +171,13 @@ typedef itk::Statistics::MABMISBasicOperationFilter<CharImageType, CharImageType
 BasicOperationFilterType::Pointer basicoperator;
 
 //
-DeformationFieldType::SpacingType   df_spacing;
-DeformationFieldType::DirectionType df_direction;
-DeformationFieldType::PointType     df_origin;
+DisplacementFieldType::SpacingType   df_spacing;
+DisplacementFieldType::DirectionType df_direction;
+DisplacementFieldType::PointType     df_origin;
 
 typedef itk::Vector<ShortPixelType, ImageDimension>      ShortVectorPixelType;
-typedef itk::Image<ShortVectorPixelType, ImageDimension> ShortDeformationFieldType;
-typedef itk::ImageFileWriter<ShortDeformationFieldType>  ShortDeformationFieldWriterType;
+typedef itk::Image<ShortVectorPixelType, ImageDimension> ShortDisplacementFieldType;
+typedef itk::ImageFileWriter<ShortDisplacementFieldType>  ShortDisplacementFieldWriterType;
 
 void SearchRootAmongAtlases(std::vector<std::string> imgfilenames, int & root);
 
@@ -263,7 +260,7 @@ int Training( itk::MABMISImageData* trainingData, std::string outputFile,
     {
     atlasFolder = outputFolder + outputxmlname;
     }
-  atlasFolder = ReplacePathSepForOS(atlasFolder); 
+  atlasFolder = ReplacePathSepForOS(atlasFolder);
   if( !atlasFolder.empty() )
     {
     atlasFolder = atlasFolder + FILESEP;
@@ -284,9 +281,9 @@ int Training( itk::MABMISImageData* trainingData, std::string outputFile,
       {
       fromImagefile  = ReplacePathSepForOS(trainingData->m_DataDirectory + trainingData->m_ImageFileNames[i]);
       }
-	
+
     bool ret1=itksys::SystemTools::CopyFileAlways(fromImagefile.c_str(), imageFiles[i].c_str() );
-	if (!ret1) 
+	if (!ret1)
       {
 	  std::cerr << "ERROR: Cannot copy atlas image file to trained atlas folder!" << std::endl;
 	  return -1;
@@ -302,8 +299,8 @@ int Training( itk::MABMISImageData* trainingData, std::string outputFile,
 
     std::string fromSegfile = trainingData->m_DataDirectory + trainingData->m_SegmentationFileNames[i];
 
-    bool ret2 = itksys::SystemTools::CopyFileAlways(fromSegfile.c_str(), segmentFiles[i].c_str() );
-	if (!ret1) 
+    ret1 =itksys::SystemTools::CopyFileAlways(fromSegfile.c_str(), segmentFiles[i].c_str() );
+    if (!ret1)
       {
 	  std::cerr << "ERROR: Cannot copy atlas image file to trained atlas folder!" << std::endl;
 	  return -1;
@@ -508,8 +505,8 @@ int main( int argc, char *argv[] )
 
   // step 1: read the training atlases
   itk::MABMISImageDataXMLFileReader::Pointer trainingXMLReader = itk::MABMISImageDataXMLFileReader::New();
-  TrainingDataXML = ReplacePathSepForOS(TrainingDataXML); 
-  TrainingOutputFile = ReplacePathSepForOS(TrainingOutputFile); 
+  TrainingDataXML = ReplacePathSepForOS(TrainingDataXML);
+  TrainingOutputFile = ReplacePathSepForOS(TrainingOutputFile);
   trainingXMLReader->SetFilename(TrainingDataXML);
   try
     {
@@ -547,7 +544,7 @@ int main( int argc, char *argv[] )
   // Will look into getting rid of these global variables later ---Xiaofeng
   datasimulator = DataSimulatorType::New();
   imgoperator = ImageOperationFilterType::New();
-  dfoperator = DeformationFieldOperationFilterType::New();
+  dfoperator = DisplacementFieldOperationFilterType::New();
   regoperator = ImageRegistrationFilterType::New();
   treeoperator = TreeOperationType::New();
   basicoperator = BasicOperationFilterType::New();
@@ -658,17 +655,17 @@ int RegistrationBetweenRootandAtlases(int root, std::vector<std::string> imageFi
     // ---------------------------------------------------------------------
     // ------------- Generate the inverse deformation field
 
-    DeformationFieldType::Pointer deformationField = 0;
-    dfoperator->ReadDeformationField(deformationFieldFileName, deformationField);
+    DisplacementFieldType::Pointer deformationField = 0;
+    dfoperator->ReadDisplacementField(deformationFieldFileName, deformationField);
 
-    DeformationFieldType::Pointer inversedDeformationField = DeformationFieldType::New();
-    inversedDeformationField->SetRegions(deformationField->GetLargestPossibleRegion() );
-    inversedDeformationField->SetSpacing(deformationField->GetSpacing() );
-    inversedDeformationField->SetDirection(deformationField->GetDirection() );
-    inversedDeformationField->SetOrigin(deformationField->GetOrigin() );
-    inversedDeformationField->Allocate();
+    DisplacementFieldType::Pointer inversedDisplacementField = DisplacementFieldType::New();
+    inversedDisplacementField->SetRegions(deformationField->GetLargestPossibleRegion() );
+    inversedDisplacementField->SetSpacing(deformationField->GetSpacing() );
+    inversedDisplacementField->SetDirection(deformationField->GetDirection() );
+    inversedDisplacementField->SetOrigin(deformationField->GetOrigin() );
+    inversedDisplacementField->Allocate();
 
-    dfoperator->InverseDeformationField3D(deformationField, inversedDeformationField);
+    dfoperator->InverseDisplacementField3D(deformationField, inversedDisplacementField);
 
     std::string invDeformedImageFileName = std::string(root_str) + "_to_" + std::string(i_str) + "_cbq_reg.nii.gz";
     std::string      invDeformationFileName = std::string(root_str) + "_to_" + std::string(i_str) + "_deform_000.nii.gz";
@@ -678,7 +675,7 @@ int RegistrationBetweenRootandAtlases(int root, std::vector<std::string> imageFi
     std::string invDeformedSegmentFileName = std::string(root_str) + "_to_" + std::string(i_str) + "seg_000.nii.gz";
     invDeformedSegmentFileName = outputFolder + invDeformedSegmentFileName;
 
-    dfoperator->WriteDeformationField(invDeformationFileName, inversedDeformationField);
+    dfoperator->WriteDisplacementField(invDeformationFileName, inversedDisplacementField);
 
     // update
     regoperator->DiffeoDemonsRegistrationWithInitialWithParameters(
@@ -689,7 +686,7 @@ int RegistrationBetweenRootandAtlases(int root, std::vector<std::string> imageFi
 
     if( isEvaluate )
       {
-      dfoperator->ApplyDeformationFieldAndWriteWithFileNames(
+      dfoperator->ApplyDisplacementFieldAndWriteWithFileNames(
         fixedImageFileName,
         invDeformationFileName,
         invDeformedSegmentFileName, false);
@@ -705,7 +702,7 @@ int BuildStatisticalDeformationModel(int root,  std::vector<std::string> imageFi
   ///////////////////////////////
   // do PCA simulation
   // std::cout << "Build deformation field model ... ";
-  std::vector<std::string> allDeformationFieldFileNames;
+  std::vector<std::string> allDisplacementFieldFileNames;
 
   // get the path from the filename
   const size_t      sep = imageFileNames[0].find_last_of(FILESEP);
@@ -737,10 +734,10 @@ int BuildStatisticalDeformationModel(int root,  std::vector<std::string> imageFi
 
     std::string deformationFieldFileName = std::string(i_str) + "_to_" + std::string(root_str) + "_deform_000.nii.gz";
     deformationFieldFileName = outputFolder + deformationFieldFileName;
-    allDeformationFieldFileNames.push_back(deformationFieldFileName);
+    allDisplacementFieldFileNames.push_back(deformationFieldFileName);
     }
 
-  return datasimulator->DoPCATraining(allDeformationFieldFileNames, atlas_size - 1, imageFileNames, root);
+  return datasimulator->DoPCATraining(allDisplacementFieldFileNames, atlas_size - 1, imageFileNames, root);
 }
 
 // return: simulated template file names
@@ -759,7 +756,7 @@ std::vector<std::string> GenerateSimulatedData(int root, std::vector<std::string
     outputFolder = outputFolder + FILESEP;
     }
 
-  std::vector<std::string> simulateDeformationFieldFileNames(0);
+  std::vector<std::string> simulateDisplacementFieldFileNames(0);
   std::vector<std::string> simulateTemplateFileNames(0);
   std::cout << "The simulated images: " << std::endl;
   for( int i = 0; i < simulatedAtlasSize; ++i )
@@ -769,30 +766,30 @@ std::vector<std::string> GenerateSimulatedData(int root, std::vector<std::string
     std::string index_string;
     basicoperator->myitoa( i, index_string, 3 );
 
-    std::string simulateDeformationFieldFileName = "simulated_deform_" + index_string + ".nii.gz";
+    std::string simulateDisplacementFieldFileName = "simulated_deform_" + index_string + ".nii.gz";
     std::string simulateTemplateFileName = "simulated_cbq_" + index_string + ".nii.gz";
-    simulateDeformationFieldFileName = outputFolder + simulateDeformationFieldFileName;
+    simulateDisplacementFieldFileName = outputFolder + simulateDisplacementFieldFileName;
     simulateTemplateFileName = outputFolder + simulateTemplateFileName;
 
-    simulateDeformationFieldFileNames.push_back(simulateDeformationFieldFileName);
+    simulateDisplacementFieldFileNames.push_back(simulateDisplacementFieldFileName);
     simulateTemplateFileNames.push_back(simulateTemplateFileName);
 
     // load simulated deformation field
-    DeformationFieldType::Pointer df = 0;
-    dfoperator->ReadDeformationField(simulateDeformationFieldFileNames[i], df);
+    DisplacementFieldType::Pointer df = 0;
+    dfoperator->ReadDisplacementField(simulateDisplacementFieldFileNames[i], df);
 
-    DeformationFieldType::Pointer invdf = DeformationFieldType::New();
+    DisplacementFieldType::Pointer invdf = DisplacementFieldType::New();
     invdf->SetRegions(df->GetLargestPossibleRegion() );
     invdf->SetSpacing(df->GetSpacing() );
     invdf->SetDirection(df->GetDirection() );
     invdf->SetOrigin(df->GetOrigin() );
     invdf->Allocate();
 
-    dfoperator->InverseDeformationField3D(df, invdf);
+    dfoperator->InverseDisplacementField3D(df, invdf);
     InternalImageType::Pointer rootImg = 0;
     imgoperator->ReadImage(imageFiles[root], rootImg);
     InternalImageType::Pointer simImg = 0;
-    dfoperator->ApplyDeformationField(rootImg, invdf, simImg, true);
+    dfoperator->ApplyDisplacementField(rootImg, invdf, simImg, true);
     imgoperator->WriteImage(simulateTemplateFileNames[i], simImg);
     }
 

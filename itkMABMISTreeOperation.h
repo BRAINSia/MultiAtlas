@@ -10,7 +10,7 @@
 
 #include <itkImage.h>
 
-#include "itkMABMISDeformationFieldFilter.h"
+#include "itkMABMISDisplacementFieldFilter.h"
 #include "itkMABMISImageOperationFilter.h"
 #include "itkMABMISBasicOperationFilter.h"
 
@@ -52,17 +52,17 @@ public:
   typedef itk::Image<ShortPixelType, ImageDimension>    ShortImageType;
   typedef itk::Image<FloatPixelType, ImageDimension>    FloatImageType;
   typedef itk::Image<InternalPixelType, ImageDimension> InternalImageType;
-  typedef itk::Image<VectorPixelType, ImageDimension>   DeformationFieldType;
+  typedef itk::Image<VectorPixelType, ImageDimension>   DisplacementFieldType;
 
-  DeformationFieldType::SpacingType   df_spacing;
-  DeformationFieldType::DirectionType df_direction;
-  DeformationFieldType::PointType     df_origin;
+  DisplacementFieldType::SpacingType   df_spacing;
+  DisplacementFieldType::DirectionType df_direction;
+  DisplacementFieldType::PointType     df_origin;
 
-  typedef itk::Statistics::MABMISDeformationFieldFilter<ImageType, ImageType> DeformationFieldOperationType;
+  typedef itk::Statistics::MABMISDisplacementFieldFilter<ImageType, ImageType> DisplacementFieldOperationType;
   typedef itk::Statistics::MABMISImageOperationFilter<ImageType, ImageType>   ImageOperationType;
   typedef itk::Statistics::MABMISBasicOperationFilter<ImageType, ImageType>   BasicOperationType;
 
-  typename DeformationFieldOperationType::Pointer dfoperator;
+  typename DisplacementFieldOperationType::Pointer dfoperator;
   typename ImageOperationType::Pointer imgoperator;
   typename BasicOperationType::Pointer basicoperator;
 

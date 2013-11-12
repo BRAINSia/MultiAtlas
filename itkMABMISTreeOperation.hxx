@@ -13,7 +13,7 @@ MABMISTreeOperation<TInputImage, TOutputImage>
 {
   isDebug = true;
 
-  dfoperator = DeformationFieldOperationType::New();
+  dfoperator = DisplacementFieldOperationType::New();
   imgoperator = ImageOperationType::New();
   basicoperator = BasicOperationType::New();
 }
